@@ -35,20 +35,17 @@ export default function KpiMetrics({
               {selectedMonthName ? `${selectedMonthName} ${selectedYear}` : `Semua Bulan ${selectedYear}`}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground font-semibold mt-0.5">
-            Pendapatan diakui sesuai prinsip akuntansi saat trip selesai (finish trip).
-          </p>
         </div>
       </div>
 
-      {/* KPI Cards: Susunan 2 di Baris Atas, 3 di Baris Bawah (Responsif di Mobile) */}
-      <div className="space-y-3 sm:space-y-4">
+      {/* KPI Cards: Susunan 2 di Baris Atas, 3 di Baris Bawah (Responsif 2 Kolom di Mobile) */}
+      <div className="space-y-2.5 sm:space-y-4">
         {/* BARIS 1: 2 Card Operasional Utama (Trip Selesai & Total Tamu) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-2.5 sm:gap-4">
           {/* Card 1: Trip Selesai */}
-          <div className="p-3.5 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
+          <div className="p-3 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
                 Trip Selesai
               </span>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -56,19 +53,19 @@ export default function KpiMetrics({
               </div>
             </div>
             <div>
-              <div className="font-mono text-2xl sm:text-3xl font-black text-foreground tracking-tight tabular-nums">
+              <div className="font-mono text-xl sm:text-2xl lg:text-3xl font-black text-foreground tracking-tight tabular-nums">
                 {formatRibuan(kpi.totalPenjualan)}
               </div>
-              <span className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-1 block">
-                Trip selesai terverifikasi
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-medium mt-0.5 block truncate">
+                Trip terverifikasi
               </span>
             </div>
           </div>
 
           {/* Card 2: Total Tamu */}
-          <div className="p-3.5 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
+          <div className="p-3 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
                 Total Tamu
               </span>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
@@ -76,10 +73,10 @@ export default function KpiMetrics({
               </div>
             </div>
             <div>
-              <div className="font-mono text-2xl sm:text-3xl font-black text-foreground tracking-tight tabular-nums">
+              <div className="font-mono text-xl sm:text-2xl lg:text-3xl font-black text-foreground tracking-tight tabular-nums">
                 {formatRibuan(kpi.totalPax)}
               </div>
-              <span className="text-[11px] sm:text-xs text-muted-foreground font-medium mt-1 block">
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-medium mt-0.5 block truncate">
                 Peserta trip terlayani
               </span>
             </div>
@@ -87,11 +84,11 @@ export default function KpiMetrics({
         </div>
 
         {/* BARIS 2: 3 Card Keuangan & Profitabilitas (Omset Penjualan, Gross Profit, Gross Margin) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-4">
           {/* Card 3: Omset Penjualan */}
-          <div className="p-3.5 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
+          <div className="p-3 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
                 Omset Penjualan
               </span>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
@@ -112,10 +109,10 @@ export default function KpiMetrics({
           </div>
 
           {/* Card 4: Gross Profit */}
-          <div className="p-3.5 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
+          <div className="p-3 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Estimasi Gross Profit
+              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
+                Gross Profit
               </span>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <TrendingUp className="w-4 h-4" />
@@ -128,16 +125,16 @@ export default function KpiMetrics({
               >
                 {formatRupiah(kpi.grossProfit)}
               </div>
-              <span className="text-[10px] sm:text-[11px] lg:text-xs text-muted-foreground font-medium mt-1 block truncate">
-                Total Beban HPP: {formatRupiah(kpi.totalHpp)}
+              <span className="text-[10px] sm:text-[11px] lg:text-xs text-muted-foreground font-medium mt-0.5 block truncate">
+                Beban HPP: {formatRupiah(kpi.totalHpp)}
               </span>
             </div>
           </div>
 
           {/* Card 5: Gross Margin */}
-          <div className="p-3.5 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
+          <div className="col-span-2 md:col-span-1 p-3 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
                 Gross Margin Operasional
               </span>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">

@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design Guide — TripBanyuwangi CRM 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #f8fafc;
+      --card:      #ffffff;
+      --border:    #e2e8f0;
+      --text:      #0f172a;
+      --muted:     #64748b;
+      --muted-bg:  #f1f5f9;
+      --primary:   #e05e26;
+      --primary-l: #fff0ea;
+      --amber:     #f59e0b;
+      --amber-l:   #fffbeb;
+      --emerald:   #059669;
+      --emerald-l: #ecfdf5;
+      --rose:      #e11d48;
+      --rose-l:    #fff1f2;
+      --blue:      #2563eb;
+      --blue-l:    #eff6ff;
+      --radius:    12px;
+      --sidebar-w: 240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #e05e26, #f59e0b);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 18px;
+    }
+
+    .brand-name { font-size: 13px; font-weight: 800; line-height: 1.2; }
+    .brand-sub  { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+    .nav-section { margin-bottom: 20px; }
+    .nav-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; padding-left: 8px; }
+    .nav-item {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: var(--primary-l);
+      color: var(--primary);
+    }
+
+    .main { flex: 1; padding: 32px 40px; max-width: 960px; }
+
+    /* ── Sections ── */
+    .page-title {
+      font-size: 26px; font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .page-sub { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+
+    section { margin-bottom: 48px; scroll-margin-top: 24px; }
+
+    h2 {
+      font-size: 16px; font-weight: 800;
+      color: var(--text);
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    h2 .num {
+      width: 24px; height: 24px;
+      background: var(--primary);
+      color: white;
+      border-radius: 6px;
+      font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    h3 { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* ── Cards & Boxes ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+    /* ── Color Swatches ── */
+    .swatch-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .swatch {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.08);
+      position: relative;
+      cursor: default;
+    }
+    .swatch-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .swatch-label { font-size: 10px; font-weight: 700; color: var(--muted); text-align: center; max-width: 48px; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    thead tr { background: var(--muted-bg); }
+    th {
+      padding: 9px 12px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--muted-bg); }
+
+    /* ── Code ── */
+    code, .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      background: var(--muted-bg);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--primary);
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    pre .comment { color: #64748b; }
+    pre .key     { color: #7dd3fc; }
+    pre .val     { color: #86efac; }
+    pre .str     { color: #fca5a5; }
+    pre .cls     { color: #fcd34d; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 11px; font-weight: 800;
+      border: 1px solid transparent;
+    }
+    .badge-orange { background: #fff0ea; color: #c2410c; border-color: #fed7aa; }
+    .badge-emerald { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+    .badge-amber   { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+    .badge-rose    { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
+    .badge-blue    { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+    .badge-slate   { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+
+    /* ── Buttons preview ── */
+    .btn-preview {
+      padding: 10px 20px; border-radius: 10px; border: none;
+      font-family: inherit; font-size: 12px; font-weight: 800;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #e05e26, #f59e0b);
+      color: white;
+      box-shadow: 0 4px 12px rgba(224,94,38,0.3);
+    }
+    .btn-secondary {
+      background: var(--muted-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-danger {
+      background: #fff1f2;
+      color: #be123c;
+      border: 1px solid #fecdd3;
+    }
+
+    /* ── Input preview ── */
+    .input-preview {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 12px;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+    }
+    .input-preview:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(224,94,38,0.12); }
+
+    /* ── Breakpoint bars ── */
+    .bp-bar { margin-bottom: 10px; }
+    .bp-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .bp-track { height: 32px; background: var(--muted-bg); border-radius: 6px; position: relative; overflow: hidden; border: 1px solid var(--border); }
+    .bp-fill {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      border-radius: 6px;
+      display: flex; align-items: center; padding-left: 10px;
+      font-size: 10px; font-weight: 800; color: white;
+      white-space: nowrap;
+    }
+
+    /* ── Spacing demo ── */
+    .space-demo { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+    .space-block {
+      background: var(--primary-l);
+      border: 1px solid #fed7aa;
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: var(--primary);
+    }
+
+    /* ── Radius demo ── */
+    .radius-demo { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .radius-block {
+      width: 56px; height: 40px;
+      background: var(--primary-l);
+      border: 2px solid var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: var(--primary);
+    }
+
+    /* ── Viewport viz ── */
+    .vp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .vp-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      background: var(--card);
+      text-align: center;
+    }
+    .vp-screen {
+      margin: 0 auto 10px;
+      border: 2px solid var(--text);
+      border-radius: 4px;
+      background: var(--muted-bg);
+      position: relative;
+    }
+    .vp-screen.mobile   { width: 32px; height: 56px; border-radius: 6px; }
+    .vp-screen.tablet   { width: 52px; height: 68px; border-radius: 4px; }
+    .vp-screen.laptop   { width: 72px; height: 48px; border-radius: 4px; }
+    .vp-screen.desktop  { width: 88px; height: 56px; border-radius: 3px; }
+    .vp-notch {
+      width: 10px; height: 3px;
+      background: var(--text); border-radius: 2px;
+      position: absolute; top: 3px; left: 50%; transform: translateX(-50%);
+    }
+    .vp-name { font-size: 12px; font-weight: 800; margin-bottom: 2px; }
+    .vp-size { font-size: 10px; color: var(--muted); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .vp-tag  { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 6px; }
+    .vp-tag.mobile  { background: #eff6ff; color: #1e40af; }
+    .vp-tag.tablet  { background: #f5f3ff; color: #5b21b6; }
+    .vp-tag.desktop { background: #ecfdf5; color: #065f46; }
+
+    /* ── Typography scale ── */
+    .type-row { display: flex; align-items: baseline; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .type-meta { font-size: 11px; color: var(--muted); font-weight: 700; min-width: 80px; font-family: 'JetBrains Mono', monospace; }
+    .type-px   { font-size: 11px; color: var(--muted); min-width: 36px; }
+
+    /* ── Component preview box ── */
+    .preview {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      background: var(--bg);
+      margin-bottom: 10px;
+    }
+
+    /* ── Dark preview ── */
+    .dark-preview {
+      background: #090d16;
+      border-radius: 10px;
+      padding: 20px;
+      color: #f8fafc;
+      border: 1px solid #1e293b;
+    }
+
+    /* ── Motion chips ── */
+    .motion-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+
+    /* ── Pill row ── */
+    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+    /* ── TOC ── */
+    .toc { background: var(--muted-bg); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 32px; }
+    .toc-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 10px; }
+    .toc-items { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; }
+    .toc-link { font-size: 12px; font-weight: 600; color: var(--primary); text-decoration: none; padding: 2px 0; }
+    .toc-link:hover { text-decoration: underline; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 9999px; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 20px 16px; }
+      .grid-2, .grid-3, .grid-4, .vp-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🧭</div>
+      <div>
+        <div class="brand-name">TripBanyuwangi</div>
+        <div class="brand-sub">Design Guide 2026</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Fondasi</div>
+        <a class="nav-item active" href="#colors">1. Color System</a>
+        <a class="nav-item" href="#typography">2. Typography</a>
+        <a class="nav-item" href="#spacing">3. Spacing & Radius</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Layout</div>
+        <a class="nav-item" href="#layout">4. Layout Architecture</a>
+        <a class="nav-item" href="#breakpoints">5. Breakpoints</a>
+        <a class="nav-item" href="#viewports">6. Viewport Targets</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Komponen</div>
+        <a class="nav-item" href="#badges">7. Badge & Chip</a>
+        <a class="nav-item" href="#buttons">8. Buttons</a>
+        <a class="nav-item" href="#inputs">9. Inputs</a>
+        <a class="nav-item" href="#cards">10. Cards & Panel</a>
+        <a class="nav-item" href="#tables">11. Tables</a>
+        <a class="nav-item" href="#modal">12. Modal</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Lainnya</div>
+        <a class="nav-item" href="#icons">13. Icons</a>
+        <a class="nav-item" href="#motion">14. Motion</a>
+        <a class="nav-item" href="#darkmode">15. Dark Mode</a>
+        <a class="nav-item" href="#responsive">16. Responsive Rules</a>
+        <a class="nav-item" href="#quickref">⚡ Quick Ref</a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="page-title">Design Guide</div>
+    <div class="page-sub">TripBanyuwangi CRM &amp; Database Reservasi 2026 — diambil langsung dari source code aktif</div>
+
+    <div class="toc">
+      <div class="toc-title">Daftar Isi</div>
+      <div class="toc-items">
+        <a class="toc-link" href="#colors">1. Color System</a>
+        <a class="toc-link" href="#badges">7. Badge &amp; Chip</a>
+        <a class="toc-link" href="#typography">2. Typography</a>
+        <a class="toc-link" href="#buttons">8. Buttons</a>
+        <a class="toc-link" href="#spacing">3. Spacing &amp; Radius</a>
+        <a class="toc-link" href="#inputs">9. Inputs</a>
+        <a class="toc-link" href="#layout">4. Layout Architecture</a>
+        <a class="toc-link" href="#cards">10. Cards &amp; Panel</a>
+        <a class="toc-link" href="#breakpoints">5. Breakpoints</a>
+        <a class="toc-link" href="#tables">11. Tables</a>
+        <a class="toc-link" href="#viewports">6. Viewport Targets</a>
+        <a class="toc-link" href="#modal">12. Modal</a>
+      </div>
+    </div>
+
+    <!-- ─── 1. Color System ─── -->
+    <section id="colors">
+      <h2><span class="num">1</span> Color System</h2>
+
+      <h3>Brand Colors</h3>
+      <div class="card">
+        <div class="swatch-row">
+          <div class="swatch-group">
+            <div class="swatch" style="background:#e05e26;"></div>
+            <div class="swatch-label">Primary<br/><code style="font-size:9px">#e05e26</code></div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch" style="background:#f27230;"></div>
+            <div class="swatch-label">Primary Dark<br/><code style="font-size:9px">#f27230</code></div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch" style="background:#f59e0b;"></div>
+            <div class="swatch-label">Amber<br/><code style="font-size:9px">#f59e0b</code></div>
+          </div>
+          <div class="swatch-group">
+            <div class="swatch" style="background:#fff0ea; border:1px solid #fed7aa;"></div>
+            <div class="swatch-label">Primary Light<br/><code style="font-size:9px">#fff0ea</code></div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Light Mode Palette</h3>
+      <div class="card">
+        <div class="swatch-row">
+          <div class="swatch-group"><div class="swatch" style="background:#f8fafc; border:1px solid #e2e8f0;"></div><div class="swatch-label">Background<br/><code style="font-size:9px">#f8fafc</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#ffffff; border:1px solid #e2e8f0;"></div><div class="swatch-label">Card<br/><code style="font-size:9px">#ffffff</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#f1f5f9; border:1px solid #e2e8f0;"></div><div class="swatch-label">Muted<br/><code style="font-size:9px">#f1f5f9</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#e2e8f0;"></div><div class="swatch-label">Secondary<br/><code style="font-size:9px">#e2e8f0</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#cbd5e1;"></div><div class="swatch-label">Border<br/><code style="font-size:9px">#cbd5e1</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#64748b;"></div><div class="swatch-label">Muted Text<br/><code style="font-size:9px">#64748b</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#0f172a;"></div><div class="swatch-label">Foreground<br/><code style="font-size:9px">#0f172a</code></div></div>
+        </div>
+      </div>
+
+      <h3>Dark Mode Palette</h3>
+      <div class="dark-preview">
+        <div class="swatch-row">
+          <div class="swatch-group"><div class="swatch" style="background:#090d16; border:1px solid #1e293b;"></div><div class="swatch-label" style="color:#94a3b8">Background<br/><code style="font-size:9px;background:#1e293b;color:#94a3b8">#090d16</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#0f172a; border:1px solid #1e293b;"></div><div class="swatch-label" style="color:#94a3b8">Card<br/><code style="font-size:9px;background:#1e293b;color:#94a3b8">#0f172a</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#1e293b;"></div><div class="swatch-label" style="color:#94a3b8">Muted<br/><code style="font-size:9px;background:#1e293b;color:#94a3b8">#1e293b</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#334155;"></div><div class="swatch-label" style="color:#94a3b8">Border Strong<br/><code style="font-size:9px;background:#1e293b;color:#94a3b8">#334155</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#94a3b8;"></div><div class="swatch-label" style="color:#94a3b8">Muted Text<br/><code style="font-size:9px;background:#1e293b;color:#94a3b8">#94a3b8</code></div></div>
+          <div class="swatch-group"><div class="swatch" style="background:#f8fafc;"></div><div class="swatch-label" style="color:#94a3b8">Foreground<br/><code style="font-size:9px;background:#1e293b;color:#94a3b8">#f8fafc</code></div></div>
+        </div>
+      </div>
+
+      <h3>Status Colors</h3>
+      <table>
+        <thead><tr><th>Status</th><th>Background</th><th>Text</th><th>Preview</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Lunas</strong></td><td><code>emerald-100</code></td><td><code>emerald-700</code></td><td><span class="badge badge-emerald">Lunas</span></td></tr>
+          <tr><td><strong>DP 1 / Sisa</strong></td><td><code>amber-100</code></td><td><code>amber-700</code></td><td><span class="badge badge-amber">DP 1</span></td></tr>
+          <tr><td><strong>Cancel</strong></td><td><code>rose-100</code></td><td><code>rose-700</code></td><td><span class="badge badge-rose">Cancel</span></td></tr>
+          <tr><td><strong>On Schedule</strong></td><td><code>blue-100</code></td><td><code>blue-700</code></td><td><span class="badge badge-blue">On Schedule</span></td></tr>
+          <tr><td><strong>HPP / Kode</strong></td><td><code>orange-100</code></td><td><code>orange-600</code></td><td><span class="badge badge-orange">TB-01</span></td></tr>
+          <tr><td><strong>Neutral / Draft</strong></td><td><code>muted</code></td><td><code>muted-foreground</code></td><td><span class="badge badge-slate">Draft</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─── 2. Typography ─── -->
+    <section id="typography">
+      <h2><span class="num">2</span> Typography</h2>
+
+      <div class="card" style="margin-bottom:12px">
+        <h3>Font Stack</h3>
+        <pre><span class="cls">font-family:</span> <span class="str">'Plus Jakarta Sans'</span>, Inter, system-ui, -apple-system, sans-serif;
+<span class="comment">/* Mono (angka kode) */</span>
+<span class="cls">font-family:</span> <span class="str">ui-monospace</span>, SFMono-Regular, Menlo, Monaco, Consolas, monospace;</pre>
+      </div>
+
+      <div class="card">
+        <h3>Skala Ukuran Teks</h3>
+        <div class="type-row"><span class="type-meta">text-[9px]</span><span class="type-px">9px</span><span style="font-size:9px;font-weight:700">Badge micro, hanya mobile</span></div>
+        <div class="type-row"><span class="type-meta">text-[10px]</span><span class="type-px">10px</span><span style="font-size:10px;font-weight:700;color:#64748b">LABEL TABEL HEADER, BADGE STATUS</span></div>
+        <div class="type-row"><span class="type-meta">text-[11px]</span><span class="type-px">11px</span><span style="font-size:11px;font-weight:600;color:#64748b">Filter chip, info sekunder, active filters</span></div>
+        <div class="type-row"><span class="type-meta">text-xs</span><span class="type-px">12px</span><span style="font-size:12px;font-weight:600">Body utama tabel, label form, tombol kecil</span></div>
+        <div class="type-row"><span class="type-meta">text-sm</span><span class="type-px">14px</span><span style="font-size:14px;font-weight:600">Heading panel, tombol CTA standar</span></div>
+        <div class="type-row"><span class="type-meta">text-base</span><span class="type-px">16px</span><span style="font-size:16px;font-weight:700">Judul card, heading level 3</span></div>
+        <div class="type-row"><span class="type-meta">text-lg</span><span class="type-px">18px</span><span style="font-size:18px;font-weight:800">Metric angka di mobile</span></div>
+        <div class="type-row"><span class="type-meta">text-xl</span><span class="type-px">20px</span><span style="font-size:20px;font-weight:900;color:#e05e26">Rp 25.000.000</span></div>
+        <div class="type-row"><span class="type-meta">text-2xl</span><span class="type-px">24px</span><span style="font-size:24px;font-weight:900;color:#059669">Rp 125.000.000</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Font Weight</h3>
+        <table>
+          <thead><tr><th>Class</th><th>Weight</th><th>Pakai Untuk</th></tr></thead>
+          <tbody>
+            <tr><td><code>font-medium</code></td><td>500</td><td>Body biasa, placeholder</td></tr>
+            <tr><td><code>font-semibold</code></td><td>600</td><td>Label sekunder, deskripsi</td></tr>
+            <tr><td><code>font-bold</code></td><td>700</td><td>Label aktif, judul card kecil</td></tr>
+            <tr><td><code>font-extrabold</code></td><td>800</td><td>Nama tamu, kode trip, nilai keuangan</td></tr>
+            <tr><td><code>font-black</code></td><td>900</td><td>Angka metrik utama, heading halaman</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:14px;padding:14px;background:var(--muted-bg);border-radius:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">Angka Finansial — selalu gunakan:</div>
+          <code>class="tabular-nums font-black break-all leading-tight"</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 3. Spacing & Radius ─── -->
+    <section id="spacing">
+      <h2><span class="num">3</span> Spacing &amp; Border Radius</h2>
+      <div class="card">
+        <h3>Spacing Kontekstual</h3>
+        <table>
+          <thead><tr><th>Konteks</th><th>Mobile</th><th>Desktop</th></tr></thead>
+          <tbody>
+            <tr><td>Padding card</td><td><code>p-3</code> atau <code>p-3.5</code></td><td><code>p-5</code></td></tr>
+            <tr><td>Padding halaman</td><td><code>p-3.5</code> atau <code>p-4</code></td><td><code>sm:p-6</code></td></tr>
+            <tr><td>Gap grid card</td><td colspan="2"><code>gap-2.5 sm:gap-4</code></td></tr>
+            <tr><td>Gap item dalam card</td><td colspan="2"><code>gap-2</code> atau <code>gap-3</code></td></tr>
+            <tr><td>Stack section</td><td colspan="2"><code>space-y-5</code> atau <code>space-y-6</code></td></tr>
+            <tr><td>Bottom page (clear sticky)</td><td colspan="2"><code>pb-12</code></td></tr>
+            <tr><td>Bottom scrollable mobile (clear action bar)</td><td colspan="2"><code>pb-24 lg:pb-6</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Border Radius (<code>--radius: 0.75rem = 12px</code>)</h3>
+        <div class="radius-demo">
+          <div style="text-align:center">
+            <div class="radius-block" style="border-radius:8px;width:48px;height:32px;font-size:9px">sm<br/>8px</div>
+          </div>
+          <div style="text-align:center">
+            <div class="radius-block" style="border-radius:10px;width:52px;height:34px;font-size:9px">md<br/>10px</div>
+          </div>
+          <div style="text-align:center">
+            <div class="radius-block" style="border-radius:12px;width:56px;height:36px;font-size:9px">lg<br/>12px</div>
+          </div>
+          <div style="text-align:center">
+            <div class="radius-block" style="border-radius:16px;width:60px;height:38px;font-size:9px">xl<br/>16px</div>
+          </div>
+          <div style="text-align:center">
+            <div class="radius-block" style="border-radius:20px;width:64px;height:40px;font-size:9px">2xl<br/>20px</div>
+          </div>
+          <div style="text-align:center">
+            <div class="radius-block" style="border-radius:9999px;width:80px;height:32px;font-size:9px">full<br/>pill</div>
+          </div>
+        </div>
+        <table style="margin-top:14px">
+          <thead><tr><th>Class</th><th>px</th><th>Pakai Untuk</th></tr></thead>
+          <tbody>
+            <tr><td><code>rounded-sm</code></td><td>8px</td><td>Badge kecil, chip filter tight</td></tr>
+            <tr><td><code>rounded-md</code></td><td>10px</td><td>Input field, select, tombol kecil</td></tr>
+            <tr><td><code>rounded-lg</code></td><td>12px</td><td>Tombol standar, item list, dropdown item</td></tr>
+            <tr><td><code>rounded-xl</code></td><td>16px</td><td>Filter panel, action button utama</td></tr>
+            <tr><td><code>rounded-2xl</code></td><td>20px</td><td>Card utama, modal panel, metric card</td></tr>
+            <tr><td><code>rounded-3xl</code></td><td>24px+</td><td>Modal container besar (desktop)</td></tr>
+            <tr><td><code>rounded-full</code></td><td>9999px</td><td>Badge pill, avatar, toggle</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── 4. Layout ─── -->
+    <section id="layout">
+      <h2><span class="num">4</span> Layout Architecture</h2>
+      <div class="card">
+        <pre style="font-size:11px">┌──────────────────────────────────────────────────────────────┐
+│  <span class="cls">SIDEBAR</span>  (w-64 expanded | w-20 collapsed | hidden mobile)   │
+│  + <span class="key">MAIN CONTENT AREA</span>  (flex-1, overflow-y-auto)              │
+│    ├── <span class="val">HEADER BAR</span>  (sticky top, h ~56px)                      │
+│    │    ├── Breadcrumb / Tab active label                    │
+│    │    ├── Filter Cepat (Bulan, Status)                     │
+│    │    ├── Tombol Auto-Sync Status Trip                     │
+│    │    └── Tombol + Reservasi Baru (CTA utama)             │
+│    └── <span class="val">PAGE CONTENT</span>  (p-4 sm:p-6, space-y-6)               │
+│         ├── Metric Cards Grid                               │
+│         ├── Filter Bar (toggle expandable)                  │
+│         └── Table / Card Feed                               │
+└──────────────────────────────────────────────────────────────┘</pre>
+
+        <h3 style="margin-top:16px">Sidebar Dimensions</h3>
+        <table>
+          <thead><tr><th>State</th><th>Width</th><th>Padding</th><th>Breakpoint</th></tr></thead>
+          <tbody>
+            <tr><td>Expanded</td><td><code>w-64</code> (256px)</td><td><code>px-4</code></td><td><code>md+</code></td></tr>
+            <tr><td>Collapsed (icon only)</td><td><code>w-20</code> (80px)</td><td><code>px-2</code></td><td><code>md+</code></td></tr>
+            <tr><td>Hidden (mobile)</td><td>0</td><td>—</td><td><code>&lt; md</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Navigation Tabs</h3>
+      <table>
+        <thead><tr><th>Tab ID</th><th>Label</th><th>Icon</th></tr></thead>
+        <tbody>
+          <tr><td><code>dashboard</code></td><td>Dashboard Eksekutif</td><td>LayoutDashboard</td></tr>
+          <tr><td><code>reservasi</code></td><td>Database Reservasi</td><td>Database</td></tr>
+          <tr><td><code>hpp</code></td><td>HPP &amp; Status Tamu</td><td>Receipt</td></tr>
+          <tr><td><code>operasional</code></td><td>Jadwal &amp; Hari H</td><td>CalendarDays</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─── 5. Breakpoints ─── -->
+    <section id="breakpoints">
+      <h2><span class="num">5</span> Breakpoints (Tailwind Default)</h2>
+
+      <div class="card">
+        <div class="bp-bar">
+          <div class="bp-label"><span>none (mobile)</span><span style="font-family:monospace;font-size:11px">0px → ∞</span></div>
+          <div class="bp-track"><div class="bp-fill" style="width:100%;background:linear-gradient(90deg,#dbeafe,#bfdbfe)"><span style="color:#1e40af">Mobile first (base styles)</span></div></div>
+        </div>
+        <div class="bp-bar">
+          <div class="bp-label"><span><code>sm:</code> — Mobile L / Tablet Portrait</span><span style="font-family:monospace;font-size:11px">≥ 640px</span></div>
+          <div class="bp-track">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:33%;background:var(--muted-bg);"></div>
+            <div class="bp-fill" style="left:33%;width:67%;background:linear-gradient(90deg,#c7d2fe,#a5b4fc)"><span style="color:#3730a3">sm: aktif di sini</span></div>
+          </div>
+        </div>
+        <div class="bp-bar">
+          <div class="bp-label"><span><code>md:</code> — Tablet / iPad</span><span style="font-family:monospace;font-size:11px">≥ 768px</span></div>
+          <div class="bp-track">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:40%;background:var(--muted-bg);"></div>
+            <div class="bp-fill" style="left:40%;width:60%;background:linear-gradient(90deg,#d1fae5,#6ee7b7)"><span style="color:#065f46">md: sidebar + tabel muncul</span></div>
+          </div>
+        </div>
+        <div class="bp-bar">
+          <div class="bp-label"><span><code>lg:</code> — Laptop</span><span style="font-family:monospace;font-size:11px">≥ 1024px</span></div>
+          <div class="bp-track">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:53%;background:var(--muted-bg);"></div>
+            <div class="bp-fill" style="left:53%;width:47%;background:linear-gradient(90deg,#fde68a,#fbbf24)"><span style="color:#92400e">lg: form 2-col, sticky panel</span></div>
+          </div>
+        </div>
+        <div class="bp-bar">
+          <div class="bp-label"><span><code>xl:</code> — Desktop Wide</span><span style="font-family:monospace;font-size:11px">≥ 1280px</span></div>
+          <div class="bp-track">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:67%;background:var(--muted-bg);"></div>
+            <div class="bp-fill" style="left:67%;width:33%;background:linear-gradient(90deg,#fed7aa,#fb923c)"><span style="color:#7c2d12">xl:</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 6. Viewport Targets ─── -->
+    <section id="viewports">
+      <h2><span class="num">6</span> Viewport Targets Per Platform</h2>
+      <div class="vp-grid">
+        <div class="vp-card">
+          <div class="vp-screen mobile"><div class="vp-notch"></div></div>
+          <div class="vp-name">HP Android S</div>
+          <div class="vp-size">360 × 780px</div>
+          <span class="vp-tag mobile">Mobile</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">Stack vertikal, card feed, bottom bar</div>
+        </div>
+        <div class="vp-card">
+          <div class="vp-screen mobile"><div class="vp-notch"></div></div>
+          <div class="vp-name">iPhone 14/15</div>
+          <div class="vp-size">390 × 844px</div>
+          <span class="vp-tag mobile">Mobile</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">Sama, sedikit lebih lega</div>
+        </div>
+        <div class="vp-card">
+          <div class="vp-screen mobile" style="width:28px;height:52px"><div class="vp-notch"></div></div>
+          <div class="vp-name">iPhone SE</div>
+          <div class="vp-size">375 × 667px</div>
+          <span class="vp-tag mobile">Mobile</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">Layar kecil, prioritas kompak</div>
+        </div>
+        <div class="vp-card">
+          <div class="vp-screen tablet"></div>
+          <div class="vp-name">iPad Mini</div>
+          <div class="vp-size">768 × 1024px</div>
+          <span class="vp-tag tablet">Tablet (md)</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">Sidebar muncul, tabel aktif</div>
+        </div>
+        <div class="vp-card">
+          <div class="vp-screen tablet" style="width:60px;height:76px"></div>
+          <div class="vp-name">iPad Air / Pro</div>
+          <div class="vp-size">820 × 1180px</div>
+          <span class="vp-tag tablet">Tablet (md)</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">Layout penuh, sidebar expanded</div>
+        </div>
+        <div class="vp-card">
+          <div class="vp-screen laptop"></div>
+          <div class="vp-name">Laptop 13"</div>
+          <div class="vp-size">1280 × 800px</div>
+          <span class="vp-tag desktop">Desktop (lg)</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">Sidebar expanded + full table</div>
+        </div>
+        <div class="vp-card">
+          <div class="vp-screen laptop" style="width:76px;height:50px"></div>
+          <div class="vp-name">Laptop 14"–15"</div>
+          <div class="vp-size">1366 × 768px</div>
+          <span class="vp-tag desktop">Desktop (lg)</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">Target dev aktif: <strong>1266×730</strong></div>
+        </div>
+        <div class="vp-card">
+          <div class="vp-screen desktop"></div>
+          <div class="vp-name">Monitor 1080p</div>
+          <div class="vp-size">1920 × 1080px</div>
+          <span class="vp-tag desktop">Desktop (xl)</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px">Wide content, max-w constraint</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 7. Badges ─── -->
+    <section id="badges">
+      <h2><span class="num">7</span> Badge &amp; Chip</h2>
+      <div class="card">
+        <h3>Status Badges</h3>
+        <div class="pill-row" style="margin-bottom:16px">
+          <span class="badge badge-emerald">Lunas</span>
+          <span class="badge badge-amber">DP 1</span>
+          <span class="badge badge-rose">Cancel</span>
+          <span class="badge badge-blue">On Schedule</span>
+          <span class="badge badge-orange">TB-01</span>
+          <span class="badge badge-slate">Draft</span>
+        </div>
+        <h3>Kode Trip (Mono)</h3>
+        <div class="pill-row" style="margin-bottom:16px">
+          <span style="font-family:monospace;font-weight:800;font-size:12px;color:#c2410c;background:#fff0ea;padding:3px 10px;border-radius:8px;border:1px solid #fed7aa">BWI-2601</span>
+          <span style="font-family:monospace;font-weight:800;font-size:12px;color:#c2410c;background:#fff0ea;padding:3px 10px;border-radius:8px;border:1px solid #fed7aa">TB-12</span>
+        </div>
+        <h3>Filter Chip Aktif</h3>
+        <div class="pill-row">
+          <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa">
+            Bulan: Jan <button style="background:none;border:none;cursor:pointer;color:#c2410c;font-size:12px;line-height:1">×</button>
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--muted-bg);color:var(--text);border:1px solid var(--border)">
+            Status: Ada HPP <button style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;line-height:1">×</button>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 8. Buttons ─── -->
+    <section id="buttons">
+      <h2><span class="num">8</span> Buttons</h2>
+      <div class="card">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button class="btn-preview btn-primary">✓ Simpan Reservasi Baru</button>
+          <button class="btn-preview btn-secondary">↺ Segarkan Data</button>
+          <button class="btn-preview btn-ghost">⊞ Filter</button>
+          <button class="btn-preview btn-danger">✕ Hapus</button>
+        </div>
+        <div style="margin-top:16px">
+          <table>
+            <thead><tr><th>Variant</th><th>Class Pattern</th><th>Touch Min</th></tr></thead>
+            <tbody>
+              <tr><td>Primary CTA</td><td><code>bg-gradient-to-r from-orange-600 to-amber-600 text-white</code></td><td>44px</td></tr>
+              <tr><td>Secondary</td><td><code>bg-muted/40 border border-border text-foreground</code></td><td>40px</td></tr>
+              <tr><td>Ghost</td><td><code>border border-border text-muted-foreground</code></td><td>40px</td></tr>
+              <tr><td>Danger/Reset</td><td><code>bg-rose-500/10 text-rose-600 border-rose-500/20</code></td><td>40px</td></tr>
+              <tr><td>Icon Only</td><td><code>w-8 h-8 rounded-full</code> atau <code>w-9 h-9 rounded-xl</code></td><td>44px</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 9. Inputs ─── -->
+    <section id="inputs">
+      <h2><span class="num">9</span> Inputs &amp; Form Elements</h2>
+      <div class="card">
+        <div style="max-width:400px;display:flex;flex-direction:column;gap:12px">
+          <input class="input-preview" placeholder="Cari kode trip, nama tamu, PIC..." />
+          <div style="display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+            <span style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--muted);background:var(--muted-bg);border-right:1px solid var(--border)">Rp</span>
+            <input class="input-preview" style="border:none;border-radius:0;flex:1" placeholder="0" />
+          </div>
+          <select class="input-preview">
+            <option>-- Pilih Paket Trip --</option>
+            <option>Ijen Adventure</option>
+          </select>
+          <textarea class="input-preview" rows="2" placeholder="Catatan operasional..."></textarea>
+        </div>
+        <div style="margin-top:16px;font-size:11px;color:var(--muted)">
+          ⚠️ Mobile: input font-size minimum <strong>16px</strong> (cegah auto-zoom iOS Safari)
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 10. Cards ─── -->
+    <section id="cards">
+      <h2><span class="num">10</span> Cards &amp; Panel</h2>
+      <div class="grid-3">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Total HPP (AE)</div>
+          <div style="font-size:20px;font-weight:900;color:#c2410c;font-variant-numeric:tabular-nums">Rp 25.000.000</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px">12 trip terisi HPP</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Gross Profit (AF)</div>
+          <div style="font-size:20px;font-weight:900;color:#059669;font-variant-numeric:tabular-nums">Rp 8.500.000</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px">Omset dikurangi HPP</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:16px">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">Rata-rata Margin (AG)</div>
+          <div style="font-size:24px;font-weight:900;color:#e05e26;font-variant-numeric:tabular-nums">34.0%</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:2px">Profitabilitas rata-rata</div>
+        </div>
+      </div>
+      <pre style="margin-top:12px"><span class="comment">/* Card standar */</span>
+<span class="cls">class=</span><span class="str">"bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs"</span></pre>
+    </section>
+
+    <!-- ─── 11. Tables ─── -->
+    <section id="tables">
+      <h2><span class="num">11</span> Tables</h2>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table>
+          <thead>
+            <tr style="background:var(--muted-bg)">
+              <th>No</th><th>Kode &amp; ID</th><th>Tamu &amp; PIC</th><th>Nilai Order</th><th>Status</th><th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-weight:700;color:var(--muted);font-size:11px;text-align:center">1</td>
+              <td><span style="font-family:monospace;font-weight:800;font-size:12px;color:#c2410c;background:#fff0ea;padding:2px 8px;border-radius:6px;border:1px solid #fed7aa">BWI-2601</span><br/><span style="font-size:10px;color:var(--muted)">#127</span></td>
+              <td><strong style="font-size:12px">Budi Santoso</strong><br/><span style="font-size:11px;color:var(--muted)">PIC: Dela</span></td>
+              <td><strong style="font-variant-numeric:tabular-nums;font-size:12px">Rp 3.200.000</strong><br/><span class="badge badge-emerald" style="font-size:10px;padding:1px 7px">Lunas</span></td>
+              <td><span class="badge badge-blue" style="font-size:10px">On Schedule</span></td>
+              <td><button class="btn-preview btn-ghost" style="padding:5px 10px;font-size:11px;border-radius:8px">Detail</button></td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--muted);font-size:11px;text-align:center">2</td>
+              <td><span style="font-family:monospace;font-weight:800;font-size:12px;color:#c2410c;background:#fff0ea;padding:2px 8px;border-radius:6px;border:1px solid #fed7aa">TB-14</span><br/><span style="font-size:10px;color:var(--muted)">#132</span></td>
+              <td><strong style="font-size:12px">Sari Dewi</strong><br/><span style="font-size:11px;color:var(--muted)">PIC: Alvin</span></td>
+              <td><strong style="font-variant-numeric:tabular-nums;font-size:12px">Rp 5.500.000</strong><br/><span class="badge badge-amber" style="font-size:10px;padding:1px 7px">DP 1</span></td>
+              <td><span class="badge badge-blue" style="font-size:10px">On Schedule</span></td>
+              <td><button class="btn-preview btn-ghost" style="padding:5px 10px;font-size:11px;border-radius:8px">Detail</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── 12. Modal ─── -->
+    <section id="modal">
+      <h2><span class="num">12</span> Modal Structure</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Mobile — Bottom Sheet</h3>
+          <pre style="font-size:11px">┌─────────────────────┐
+│    overlay blur     │
+│                     │
+│  ┌───────────────┐  │
+│  │  Header fixed │  │
+│  ├───────────────┤  │
+│  │               │  │
+│  │  Scrollable   │  │
+│  │  form body    │  │
+│  │  pb-24        │  │
+│  │               │  │
+│  ├───────────────┤  │
+│  │ Sticky action │  │
+│  └───────────────┘  │
+│  rounded-t-2xl      │
+│  h-[95dvh]          │
+└─────────────────────┘</pre>
+        </div>
+        <div>
+          <h3>Desktop — Center Dialog</h3>
+          <pre style="font-size:11px">┌─────────────────────┐
+│                     │
+│  ┌───────────────┐  │
+│  │ Header fixed  │  │
+│  ├───────────────┤  │
+│  │               │  │
+│  │  Scrollable   │  │
+│  │  form body    │  │
+│  │  2-col grid   │  │
+│  │               │  │
+│  │  [Submit btn] │  │
+│  └───────────────┘  │
+│   rounded-3xl        │
+│   max-h-[92vh]      │
+└─────────────────────┘</pre>
+        </div>
+      </div>
+      <pre><span class="comment">/* Outer wrapper */</span>
+<span class="cls">class=</span><span class="str">"fixed inset-0 z-50 overflow-y-auto sm:overflow-hidden
+  bg-slate-950/70 backdrop-blur-sm
+  flex items-end sm:items-center justify-center p-0 sm:p-4"</span>
+
+<span class="comment">/* Panel */</span>
+<span class="cls">class=</span><span class="str">"bg-card rounded-t-2xl sm:rounded-3xl w-full max-w-6xl
+  h-[95dvh] sm:h-auto sm:max-h-[92vh] flex flex-col overflow-hidden"</span>
+
+<span class="comment">/* Scrollable body */</span>
+<span class="cls">class=</span><span class="str">"flex-1 overflow-y-auto p-3.5 sm:p-6 pb-24 lg:pb-6"</span>
+
+<span class="comment">/* Sticky mobile action bar */</span>
+<span class="cls">class=</span><span class="str">"block lg:hidden shrink-0 border-t border-border px-4 py-3"</span></pre>
+    </section>
+
+    <!-- ─── 13. Icons ─── -->
+    <section id="icons">
+      <h2><span class="num">13</span> Icons (Lucide React)</h2>
+      <table>
+        <thead><tr><th>Icon Name</th><th>Size Default</th><th>Pakai Untuk</th></tr></thead>
+        <tbody>
+          <tr><td><code>Compass</code></td><td>22px (header)</td><td>Brand TripBanyuwangi, logo sidebar</td></tr>
+          <tr><td><code>LayoutDashboard</code></td><td>20px</td><td>Tab Dashboard</td></tr>
+          <tr><td><code>Database</code></td><td>20px</td><td>Tab Reservasi</td></tr>
+          <tr><td><code>Receipt</code></td><td>20px</td><td>Tab HPP</td></tr>
+          <tr><td><code>CalendarDays</code></td><td>20px</td><td>Tab Jadwal Operasional</td></tr>
+          <tr><td><code>TrendingUp</code></td><td>15px</td><td>Metric margin/profit</td></tr>
+          <tr><td><code>Search</code></td><td>16px</td><td>Input pencarian</td></tr>
+          <tr><td><code>SlidersHorizontal</code></td><td>14px</td><td>Tombol filter toggle</td></tr>
+          <tr><td><code>RefreshCw</code></td><td>14–16px</td><td>Refresh data, loading spin</td></tr>
+          <tr><td><code>Edit3</code></td><td>12–14px</td><td>Tombol edit/update</td></tr>
+          <tr><td><code>Trash2</code></td><td>14px</td><td>Hapus item</td></tr>
+          <tr><td><code>ChevronDown/Up</code></td><td>14px</td><td>Expand/collapse filter</td></tr>
+          <tr><td><code>X</code></td><td>11–14px</td><td>Tutup modal, hapus filter chip</td></tr>
+          <tr><td><code>AlertTriangle</code></td><td>12–16px</td><td>Warning, perlu update</td></tr>
+          <tr><td><code>CheckCircle</code></td><td>16px</td><td>Sukses, submit</td></tr>
+          <tr><td><code>FileText</code></td><td>12–14px</td><td>Laporan detail HPP</td></tr>
+          <tr><td><code>ArrowLeft</code></td><td>16px</td><td>Kembali ke katalog HPP</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─── 14. Motion ─── -->
+    <section id="motion">
+      <h2><span class="num">14</span> Motion &amp; Animasi (MOTION: 1 — Subtle)</h2>
+      <div class="card">
+        <table>
+          <thead><tr><th>Class</th><th>Durasi</th><th>Pakai Untuk</th></tr></thead>
+          <tbody>
+            <tr><td><code>transition-all</code></td><td>150ms</td><td>Hover tombol, card, filter pill</td></tr>
+            <tr><td><code>transition-colors</code></td><td>150ms</td><td>Hover row tabel</td></tr>
+            <tr><td><code>transition-all duration-200</code></td><td>200ms</td><td>Sidebar collapse/expand</td></tr>
+            <tr><td><code>animate-spin</code></td><td>loop</td><td>RefreshCw saat loading data</td></tr>
+            <tr><td><code>animate-fade-in</code></td><td>custom CSS</td><td>Section mount, modal open</td></tr>
+            <tr><td><code>active:scale-98</code></td><td>instant</td><td>Tombol ditekan (micro-feedback)</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:12px;padding:12px;background:var(--muted-bg);border-radius:8px;font-size:12px;color:var(--muted)">
+          <strong style="color:var(--rose)">Dilarang keras:</strong> bounce, float, parallax, scroll-reveal animation, radial glow melayang, elemen berkedip.
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 15. Dark Mode ─── -->
+    <section id="darkmode">
+      <h2><span class="num">15</span> Dark Mode</h2>
+      <div class="dark-preview">
+        <div style="display:flex;gap:12px;margin-bottom:14px">
+          <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px;flex:1">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Total HPP</div>
+            <div style="font-size:18px;font-weight:900;color:#fb923c">Rp 25.000.000</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px">12 trip terisi HPP</div>
+          </div>
+          <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:14px;flex:1">
+            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:4px">Gross Profit</div>
+            <div style="font-size:18px;font-weight:900;color:#34d399">Rp 8.500.000</div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:2px">Omset dikurangi HPP</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#64748b">Dark mode via <code style="background:#1e293b;color:#94a3b8;padding:1px 5px;border-radius:4px">class="dark"</code> pada &lt;html&gt; tag. Toggle Sun/Moon di sidebar.</div>
+      </div>
+      <div style="margin-top:12px;padding:12px;background:var(--muted-bg);border-radius:8px;font-size:12px">
+        Semua komponen wajib punya variant <code>dark:</code> — background, text, border. Input/select auto-handled via <code>color-scheme: dark</code>.
+      </div>
+    </section>
+
+    <!-- ─── 16. Responsive Rules ─── -->
+    <section id="responsive">
+      <h2><span class="num">16</span> Responsive Rules</h2>
+      <table>
+        <thead><tr><th>Konteks</th><th>Mobile (&lt; md)</th><th>Desktop (≥ md / lg)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Data list</strong></td><td>Card feed stack vertikal</td><td>Tabel horizontal</td></tr>
+          <tr><td><strong>Filter</strong></td><td>Drawer full-width toggle bawah</td><td>Panel expandable inline</td></tr>
+          <tr><td><strong>Grid metric</strong></td><td><code>grid-cols-2</code></td><td><code>grid-cols-3</code> atau lebih</td></tr>
+          <tr><td><strong>Modal</strong></td><td>Bottom sheet, <code>rounded-t-2xl</code>, <code>h-[95dvh]</code></td><td>Center dialog, <code>rounded-3xl</code>, <code>max-h-[92vh]</code></td></tr>
+          <tr><td><strong>Form kolom</strong></td><td><code>grid-cols-1</code></td><td><code>grid-cols-2</code> atau <code>lg:grid-cols-12</code></td></tr>
+          <tr><td><strong>Sidebar</strong></td><td>Hidden</td><td><code>w-64</code> atau <code>w-20</code></td></tr>
+          <tr><td><strong>Right panel (sticky)</strong></td><td>Normal flow (tidak sticky)</td><td><code>lg:sticky lg:top-2</code></td></tr>
+          <tr><td><strong>Action buttons</strong></td><td>Sticky bottom bar (<code>block lg:hidden</code>)</td><td>Inline di dalam form (<code>hidden lg:block</code>)</td></tr>
+          <tr><td><strong>Scrollable form bottom</strong></td><td><code>pb-24</code> (clear sticky bar)</td><td><code>lg:pb-6</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ─── Quick Ref ─── -->
+    <section id="quickref">
+      <h2>⚡ Quick Reference</h2>
+      <pre><span class="comment">/* ──── BRAND ──── */</span>
+<span class="key">Primary (light)</span>  <span class="val">#e05e26</span>   Terracotta Orange
+<span class="key">Primary (dark) </span>  <span class="val">#f27230</span>   Terracotta Orange Dark
+<span class="key">Accent         </span>  <span class="val">#f59e0b</span>   Amber
+
+<span class="comment">/* ──── BACKGROUND ──── */</span>
+<span class="key">BG Light       </span>  <span class="val">#f8fafc</span>   Slate 50
+<span class="key">BG Dark        </span>  <span class="val">#090d16</span>   Deep Charcoal Navy
+<span class="key">Card Light     </span>  <span class="val">#ffffff</span>
+<span class="key">Card Dark      </span>  <span class="val">#0f172a</span>   Slate 900
+
+<span class="comment">/* ──── TEXT ──── */</span>
+<span class="key">Text Light     </span>  <span class="val">#0f172a</span>   Slate 900  (rasio 15:1)
+<span class="key">Text Dark      </span>  <span class="val">#f8fafc</span>   Slate 50
+<span class="key">Muted Light    </span>  <span class="val">#64748b</span>   Slate 500
+<span class="key">Muted Dark     </span>  <span class="val">#94a3b8</span>   Slate 400
+
+<span class="comment">/* ──── FONT ──── */</span>
+<span class="key">Font           </span>  Plus Jakarta Sans, Inter, system-ui
+<span class="key">Mono           </span>  ui-monospace, SFMono-Regular, Menlo
+
+<span class="comment">/* ──── BASE RADIUS ──── */</span>
+<span class="key">--radius       </span>  <span class="val">0.75rem</span> = 12px
+
+<span class="comment">/* ──── BREAKPOINTS ──── */</span>
+<span class="key">Mobile         </span>  0px      (base, default)
+<span class="key">sm:            </span>  640px
+<span class="key">md:            </span>  768px    sidebar + tabel muncul
+<span class="key">lg:            </span>  1024px   form 2-col, sticky panel
+<span class="key">xl:            </span>  1280px
+
+<span class="comment">/* ──── TOUCH TARGET ──── */</span>
+<span class="key">Min height     </span>  44px  (tombol & tap target mobile)
+
+<span class="comment">/* ──── DIALS ──── */</span>
+<span class="key">ENERGY  </span>  <span class="val">1</span>  Calm    — tidak ada glow/neon/kedip
+<span class="key">RHYTHM  </span>  <span class="val">2</span>  Struct  — grid teratur, collapsible sidebar
+<span class="key">MOTION  </span>  <span class="val">1</span>  Subtle  — 150ms transition, no bounce</pre>
+    </section>
+
+    <div style="margin-top:48px;padding:16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);text-align:center">
+      TripBanyuwangi CRM Design Guide 2026 — diambil dari source code aktif
+    </div>
+  </main>
+</div>
+
+<script>
+  // Highlight active nav item on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-item');
+  window.addEventListener('scroll', () => {
+    let cur = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + cur);
+    });
+  });
+  navLinks.forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const id = a.getAttribute('href').slice(1);
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>

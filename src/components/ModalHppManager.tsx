@@ -191,26 +191,26 @@ export default function ModalHppManager({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in">
-      <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-6 animate-fade-in">
+      <div className="bg-slate-50 dark:bg-slate-900 rounded-3xl w-full max-w-4xl max-h-[96vh] sm:max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
         {/* Header */}
-        <div className="bg-white dark:bg-slate-900 px-6 py-4.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 z-20">
+        <div className="bg-white dark:bg-slate-900 px-4 py-3.5 sm:px-6 sm:py-4.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 z-20">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold border border-orange-200/60 dark:border-orange-900/40">
-              <DollarSign className="w-5 h-5" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold border border-orange-200/60 dark:border-orange-900/40">
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">
+              <h2 className="text-sm sm:text-lg font-black text-slate-900 dark:text-slate-100">
                 Update Status Payment &amp; HPP Manager
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Kelola rincian biaya HPP dan status pembayaran tamu di Google Sheets
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all cursor-pointer"
             title="Tutup (Esc)"
           >
             <X className="w-4 h-4" />
@@ -404,14 +404,15 @@ export default function ModalHppManager({
                       </div>
 
                       {/* 5. Delete Action */}
-                      <div className="sm:col-span-1 flex justify-end">
+                      <div className="sm:col-span-1 flex justify-end pt-1 sm:pt-0">
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(it.id)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-all"
+                          className="w-full sm:w-auto min-h-[36px] sm:min-h-[32px] px-2.5 py-1.5 text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 sm:border-0 rounded-lg transition-all flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer"
                           title="Hapus baris ini"
                         >
                           <Trash2 className="w-4 h-4" />
+                          <span className="inline sm:hidden">Hapus Biaya</span>
                         </button>
                       </div>
                     </div>
@@ -439,7 +440,7 @@ export default function ModalHppManager({
               type="button"
               onClick={handleSaveHpp}
               disabled={isSaving || isLoading}
-              className="py-3 px-6 rounded-xl text-white font-extrabold text-xs sm:text-sm bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 shadow-md shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto min-h-[44px] py-3 px-6 rounded-xl text-white font-extrabold text-xs sm:text-sm bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 shadow-md shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSaving ? (
                 <>

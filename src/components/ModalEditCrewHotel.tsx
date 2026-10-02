@@ -79,19 +79,19 @@ export default function ModalEditCrewHotel({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 animate-fade-in">
       <div className="bg-card border border-border rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden text-foreground">
         {/* Header Modal */}
-        <div className="p-5 border-b border-border bg-muted/30 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
-              <Building2 size={20} />
+        <div className="px-4 py-3.5 sm:p-5 border-b border-border bg-muted/30 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold">
+              <Building2 size={18} />
             </div>
             <div>
-              <h3 className="font-heading font-black text-base text-foreground tracking-tight">
+              <h3 className="font-heading font-black text-sm sm:text-base text-foreground tracking-tight">
                 Form Edit Operasional (Hotel &amp; Crew)
               </h3>
-              <p className="text-xs text-muted-foreground font-semibold">
+              <p className="text-[11px] sm:text-xs text-muted-foreground font-semibold">
                 Tamu: <strong className="text-foreground">{reservasi.namaTamu}</strong> (#{reservasi.kode})
               </p>
             </div>
@@ -106,7 +106,7 @@ export default function ModalEditCrewHotel({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold">
               {errorMsg}
@@ -180,18 +180,18 @@ export default function ModalEditCrewHotel({
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-3 border-t border-border flex items-center justify-end gap-2">
+          <div className="pt-3 border-t border-border grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-border bg-muted/50 hover:bg-muted text-xs font-bold text-foreground transition-all cursor-pointer"
+              className="w-full sm:w-auto min-h-[42px] sm:min-h-0 px-4 py-2.5 sm:py-2 rounded-xl border border-border bg-muted/50 hover:bg-muted text-xs font-bold text-foreground transition-all cursor-pointer flex items-center justify-center text-center"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-md shadow-orange-600/20 transition-all disabled:opacity-60 cursor-pointer"
+              className="w-full sm:w-auto min-h-[42px] sm:min-h-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-md shadow-orange-600/20 transition-all disabled:opacity-60 cursor-pointer text-center"
             >
               {isSaving ? (
                 <>

@@ -149,8 +149,148 @@ export default function ReservationTable({
         </div>
       </div>
 
-      {/* Table Responsive Wrapper */}
-      <div className="overflow-x-auto min-h-[350px]">
+      {/* Mobile Card Feed (Screen < md) */}
+      <div className="block md:hidden divide-y divide-border/60 min-h-[300px]">
+        {isLoading ? (
+          <div className="py-16 text-center text-muted-foreground">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <Loader2 className="w-6 h-6 text-primary animate-spin" />
+              <span className="text-xs font-semibold text-muted-foreground">
+                Sinkronisasi data Google Sheets...
+              </span>
+            </div>
+          </div>
+        ) : reservations.length === 0 ? (
+          <div className="py-14 px-4 text-center">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <div className="h-10 w-10 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
+                <Search size={18} />
+              </div>
+              <span className="text-sm font-bold text-foreground">Tidak ada reservasi ditemukan</span>
+              <span className="text-xs text-muted-foreground">Coba ubah kata kunci atau bersihkan filter yang aktif.</span>
+            </div>
+          </div>
+        ) : (
+          reservations.map((r) => {
+            const cleanWa = (r.whatsapp || '').replace(/[^0-9]/g, '');
+            const waLink = cleanWa.startsWith('0')
+              ? `https://wa.me/62${cleanWa.substring(1)}`
+              : `https://wa.me/${cleanWa}`;
+
+            return (
+              <div
+                key={r.rowNumber}
+                onClick={() => onViewDetail(r)}
+                className="p-3.5 space-y-2.5 hover:bg-muted/30 active:bg-muted/50 transition-colors cursor-pointer"
+              >
+                {/* Header Card: Kode, PIC, & Status Bayar */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                      {r.kode}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">
+                      PIC: <strong className="text-foreground">{r.picAgen || '-'}</strong>
+                    </span>
+                  </div>
+                  <div className="shrink-0">
+                    {renderPaymentBadge(r)}
+                  </div>
+                </div>
+
+                {/* Tamu, Paket & Jadwal */}
+                <div>
+                  <div className="text-xs sm:text-sm font-black text-foreground leading-snug">
+                    {r.namaTamu}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5 font-semibold">
+                    {r.paket || '-'} • <strong className="text-foreground font-bold">{r.pax} Orang</strong>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
+                    {formatDateDisplay(r.startTrip)}
+                    {r.finishTrip && r.finishTrip !== r.startTrip && ` - ${formatDateDisplay(r.finishTrip)}`}
+                    {' '}({r.trip ? `${r.trip} Hari` : '1 Hari'})
+                  </div>
+                </div>
+
+                {/* Finansial Ringkas */}
+                <div className="p-2 rounded-xl bg-muted/40 border border-border/70 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold block">
+                      Nilai Order
+                    </span>
+                    <span className="font-mono font-bold text-foreground">
+                      {formatRupiah(r.nilaiOrder)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold block">
+                      Sisa Pelunasan
+                    </span>
+                    {r.sisaPelunasan > 0 ? (
+                      <span className="font-mono font-black text-rose-600 dark:text-rose-400">
+                        {formatRupiah(r.sisaPelunasan)}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        Lunas
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status Trip & WA Link */}
+                <div className="flex items-center justify-between pt-0.5">
+                  <div>{renderTripBadge(r)}</div>
+                  {r.whatsapp && (
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
+                    >
+                      <MessageCircle size={13} />
+                      <span>{r.whatsapp}</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Quick Action Buttons (Touch targets) */}
+                <div
+                  className="pt-2 border-t border-border/50 grid grid-cols-3 gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() => onViewDetail(r)}
+                    className="py-2 px-2 rounded-xl border border-border text-xs font-bold text-foreground bg-card hover:bg-muted active:scale-95 transition-all text-center flex items-center justify-center gap-1.5 min-h-[40px] shadow-2xs cursor-pointer"
+                  >
+                    <Eye size={14} />
+                    <span>Detail</span>
+                  </button>
+                  <button
+                    onClick={() => onEdit(r)}
+                    className="py-2 px-2 rounded-xl border border-border text-xs font-bold text-primary bg-card hover:bg-primary/10 active:scale-95 transition-all text-center flex items-center justify-center gap-1.5 min-h-[40px] shadow-2xs cursor-pointer"
+                  >
+                    <Edit3 size={14} />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={() => onOpenHpp(r)}
+                    className="py-2 px-2 rounded-xl border border-border text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-card hover:bg-emerald-500/10 active:scale-95 transition-all text-center flex items-center justify-center gap-1.5 min-h-[40px] shadow-2xs cursor-pointer"
+                  >
+                    <DollarSign size={14} />
+                    <span>HPP</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table Responsive Wrapper */}
+      <div className="hidden md:block overflow-x-auto min-h-[350px]">
         <table className="w-full text-left border-collapse min-w-[980px]">
           <thead>
             <tr className="border-b border-border/80 bg-muted/40 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">

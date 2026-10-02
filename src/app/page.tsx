@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Reservasi, DashboardKpi } from '@/lib/types';
 import { Sidebar, NavTab } from '@/components/Sidebar';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { HeaderBar } from '@/components/HeaderBar';
 import KpiMetrics from '@/components/KpiMetrics';
 import SalesCharts from '@/components/SalesCharts';
@@ -52,6 +53,48 @@ export default function DashboardPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  const handleSelectTab = useCallback((tab: NavTab) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('tripbwi_active_tab', tab);
+      if (window.location.hash !== `#${tab}`) {
+        window.history.replaceState(null, '', `#${tab}`);
+      }
+    }
+  }, []);
+
+  // Restore activeTab from URL hash or localStorage on initial client mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const VALID_TABS: NavTab[] = ['dashboard', 'reservasi', 'hpp', 'operasional'];
+    const hash = window.location.hash.replace('#', '') as NavTab;
+    if (VALID_TABS.includes(hash)) {
+      setActiveTab(hash);
+      return;
+    }
+
+    const savedTab = localStorage.getItem('tripbwi_active_tab') as NavTab | null;
+    if (savedTab && VALID_TABS.includes(savedTab)) {
+      setActiveTab(savedTab);
+      window.history.replaceState(null, '', `#${savedTab}`);
+    }
+  }, []);
+
+  // Listen for browser back / forward hash navigation
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const VALID_TABS: NavTab[] = ['dashboard', 'reservasi', 'hpp', 'operasional'];
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '') as NavTab;
+      if (VALID_TABS.includes(hash)) {
+        setActiveTab(hash);
+        localStorage.setItem('tripbwi_active_tab', hash);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   // Data States
   const [reservations, setReservations] = useState<Reservasi[]>([]);
   const [totalReservations, setTotalReservations] = useState(0);
@@ -88,7 +131,7 @@ export default function DashboardPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [activeReservation, setActiveReservation] = useState<Reservasi | null>(null);
   const [selectedHppKode, setSelectedHppKode] = useState<string>('');
-  const [hppInitialMode, setHppInitialMode] = useState<'update' | 'detail' | 'katalog'>('detail');
+  const [hppInitialMode, setHppInitialMode] = useState<'update' | 'detail' | 'katalog'>('katalog');
 
   // Initialize theme from system or localStorage
   useEffect(() => {
@@ -230,10 +273,10 @@ export default function DashboardPage() {
           activeTab={activeTab}
           onSelectTab={(tab) => {
             if (tab === 'hpp') {
-              setHppInitialMode('detail');
+              setHppInitialMode('katalog');
               setSelectedHppKode('');
             }
-            setActiveTab(tab);
+            handleSelectTab(tab);
           }}
           theme={theme}
           onToggleTheme={handleToggleTheme}
@@ -261,10 +304,10 @@ export default function DashboardPage() {
           activeTab={activeTab}
           onSelectTab={(tab) => {
             if (tab === 'hpp') {
-              setHppInitialMode('detail');
+              setHppInitialMode('katalog');
               setSelectedHppKode('');
             }
-            setActiveTab(tab);
+            handleSelectTab(tab);
             setIsMobileSidebarOpen(false);
           }}
           theme={theme}
@@ -276,7 +319,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Independent Scroll Container */}
-      <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden pb-20 md:pb-0">
         {/* Top Header Bar */}
         <HeaderBar
           activeTab={activeTab}
@@ -351,13 +394,10 @@ export default function DashboardPage() {
 
               {/* Quick Filter & Table Preview */}
               <div className="pt-4 border-t border-border">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-extrabold text-foreground tracking-tight">
-                    Tinjauan Cepat Reservasi
-                  </h3>
+                <div className="flex items-center justify-end mb-4">
                   <button
-                    onClick={() => setActiveTab('reservasi')}
-                    className="text-xs font-bold text-primary hover:underline"
+                    onClick={() => handleSelectTab('reservasi')}
+                    className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1"
                   >
                     Buka Tabel Lengkap →
                   </button>
@@ -381,7 +421,7 @@ export default function DashboardPage() {
                     setActiveReservation(r);
                     setSelectedHppKode(r.kode);
                     setHppInitialMode('update');
-                    setActiveTab('hpp');
+                    handleSelectTab('hpp');
                   }}
                   onOpenReview={(r) => {
                     setActiveReservation(r);
@@ -448,7 +488,7 @@ export default function DashboardPage() {
                   setActiveReservation(r);
                   setSelectedHppKode(r.kode);
                   setHppInitialMode('update');
-                  setActiveTab('hpp');
+                  handleSelectTab('hpp');
                 }}
                 onOpenReview={(r) => {
                   setActiveReservation(r);
@@ -528,14 +568,14 @@ export default function DashboardPage() {
           setSelectedHppKode(r.kode);
           setHppInitialMode('update');
           setIsDetailModalOpen(false);
-          setActiveTab('hpp');
+          handleSelectTab('hpp');
         }}
         onOpenDetailHpp={(r) => {
           setActiveReservation(r);
           setSelectedHppKode(r.kode);
           setHppInitialMode('detail');
           setIsDetailModalOpen(false);
-          setActiveTab('hpp');
+          handleSelectTab('hpp');
         }}
         onOpenEdit={(r) => {
           setActiveReservation(r);
@@ -597,6 +637,19 @@ export default function DashboardPage() {
           fetchReservations(true);
           fetchDashboardData();
         }}
+      />
+
+      {/* Mobile Bottom Navigation Bar (1-Thumb UX) */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSelectTab={(tab) => {
+          if (tab === 'hpp') {
+            setHppInitialMode('katalog');
+            setSelectedHppKode('');
+          }
+          handleSelectTab(tab);
+        }}
+        unpaidCount={unpaidReservationsCount}
       />
     </div>
   );

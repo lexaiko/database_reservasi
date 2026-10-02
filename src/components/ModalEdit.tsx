@@ -270,49 +270,51 @@ export default function ModalEdit({
   if (!isOpen || !reservasi) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in">
-      <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl w-full max-w-6xl max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
+    <div className="fixed inset-0 z-50 overflow-y-auto sm:overflow-hidden bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 lg:p-6 animate-fade-in">
+      <div className="bg-slate-50 dark:bg-slate-900 rounded-t-2xl sm:rounded-3xl w-full max-w-6xl h-[95dvh] sm:h-auto sm:max-h-[92vh] flex flex-col shadow-2xl border-t sm:border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100 relative">
         
         {/* Header Modal */}
-        <div className="bg-white dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold border border-orange-100 dark:border-orange-900/40">
+        <div className="bg-white dark:bg-slate-900 px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 z-20">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center font-bold border border-orange-100 dark:border-orange-900/40 shrink-0">
               <Compass className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-                  Edit Reservasi: <span className="text-orange-600 dark:text-orange-400">{reservasi.kode}</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 tracking-tight truncate">
+                  Edit: <span className="text-orange-600 dark:text-orange-400">{reservasi.kode}</span>
                 </h2>
-                <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-                  Baris #{reservasi.rowNumber}
+                <span className="text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 shrink-0">
+                  #{reservasi.rowNumber}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Pembaruan data operasional, itinerary, akomodasi, dan status Google Sheets
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
+                Update data operasional &amp; Google Sheets
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all"
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-all shrink-0 cursor-pointer"
             title="Tutup (Esc)"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form Body: 2-Column Split Layout */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto p-5 sm:p-6">
-          {errorMessage && (
-            <div className="mb-5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
+        {/* Form Container with Flex-1 & Fixed Mobile Bottom Bar */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Scrollable Form Body */}
+          <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-5">
+            {errorMessage && (
+              <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             {/* LEFT COLUMN: Data Input Panels (8 Cols) */}
             <div className="lg:col-span-8 space-y-5">
@@ -534,30 +536,32 @@ export default function ModalEdit({
                   </select>
 
                   {/* Tambah Paket Baru */}
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mt-2">
                     <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       + Tambah Paket:
                     </span>
-                    <input
-                      type="text"
-                      value={newPaketInput}
-                      onChange={(e) => setNewPaketInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddPaket();
-                        }
-                      }}
-                      placeholder="Kode / nama paket baru..."
-                      className="w-full px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-orange-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddPaket}
-                      className="px-3 py-1 bg-slate-900 dark:bg-slate-750 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all whitespace-nowrap"
-                    >
-                      + Tambah
-                    </button>
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <input
+                        type="text"
+                        value={newPaketInput}
+                        onChange={(e) => setNewPaketInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddPaket();
+                          }
+                        }}
+                        placeholder="Kode / nama paket baru..."
+                        className="w-full px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-orange-500 min-h-[36px]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddPaket}
+                        className="px-3 py-1.5 bg-slate-900 dark:bg-slate-750 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center cursor-pointer"
+                      >
+                        + Tambah
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -664,30 +668,32 @@ export default function ModalEdit({
                     </div>
 
                     {/* Tambah Singkatan Baru */}
-                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                       <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                         + Tambah Singkatan:
                       </span>
-                      <input
-                        type="text"
-                        value={newSingkatanInput}
-                        onChange={(e) => setNewSingkatanInput(e.target.value.toUpperCase())}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddSingkatan();
-                          }
-                        }}
-                        placeholder="Singkatan baru (cth: PL, TR)..."
-                        className="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-orange-500 w-44 uppercase"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddSingkatan}
-                        className="px-3 py-1 bg-slate-900 dark:bg-slate-750 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all"
-                      >
-                        + Tambah
-                      </button>
+                      <div className="flex items-center gap-1.5 flex-1">
+                        <input
+                          type="text"
+                          value={newSingkatanInput}
+                          onChange={(e) => setNewSingkatanInput(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddSingkatan();
+                            }
+                          }}
+                          placeholder="Singkatan baru (cth: PL, TR)..."
+                          className="w-full px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-orange-500 uppercase min-h-[36px]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddSingkatan}
+                          className="px-3 py-1.5 bg-slate-900 dark:bg-slate-750 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all whitespace-nowrap min-h-[36px] flex items-center justify-center cursor-pointer"
+                        >
+                          + Tambah
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -928,12 +934,12 @@ export default function ModalEdit({
                 )}
               </div>
 
-              {/* Submit Buttons */}
-              <div className="space-y-2 pt-1">
+              {/* Submit Buttons (Desktop View) */}
+              <div className="hidden lg:block space-y-2 pt-1">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 px-4 rounded-xl text-white font-extrabold text-xs uppercase tracking-wider bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 shadow-md shadow-orange-500/25 active:scale-98 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="w-full min-h-[44px] py-3.5 px-4 rounded-xl text-white font-extrabold text-xs uppercase tracking-wider bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 shadow-md shadow-orange-500/25 active:scale-98 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -950,14 +956,68 @@ export default function ModalEdit({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full py-2.5 px-4 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all text-center"
+                  className="w-full min-h-[42px] py-2.5 px-4 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-bold text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all text-center flex items-center justify-center cursor-pointer"
                 >
                   Batal / Kembali
                 </button>
               </div>
 
             </div>
+          </div>
+        </div>
 
+          {/* Sticky Mobile Bottom Bar: Live Billing Preview & Quick Submit (Fixed outside scroll area) */}
+          <div className="block lg:hidden shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 py-3 shadow-xl z-30 safe-area-pb">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                  Total Tagihan:
+                </span>
+                <span className="text-xs font-black text-slate-900 dark:text-slate-100 tabular-nums">
+                  {formatRupiah(nilaiOrder)}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                  Sisa Piutang:
+                </span>
+                <span
+                  className={`text-xs font-black tabular-nums ${
+                    isLunas ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'
+                  }`}
+                >
+                  {isLunas ? 'Rp 0 (LUNAS)' : formatRupiah(sisa)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all text-center flex items-center justify-center cursor-pointer min-h-[44px]"
+              >
+                Batal
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="col-span-2 py-2.5 px-4 rounded-xl text-white font-black text-xs uppercase tracking-wider bg-orange-600 hover:bg-orange-700 shadow-md shadow-orange-500/20 active:scale-98 transition-all disabled:opacity-60 flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Simpan Perubahan</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

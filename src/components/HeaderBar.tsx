@@ -70,24 +70,24 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <button
             onClick={onSyncStatuses}
             disabled={isSyncing}
             title="Sinkronisasi status trip hari H & finish trip ke Google Sheets"
-            className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-2 text-xs font-bold rounded-xl text-foreground bg-secondary hover:bg-muted border border-border/80 transition-all disabled:opacity-60 cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs font-bold rounded-xl text-foreground bg-secondary hover:bg-muted border border-border/80 transition-all disabled:opacity-60 cursor-pointer shadow-2xs min-h-[38px] active:scale-95"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-primary' : 'text-muted-foreground'}`} />
-            <span className="hidden md:inline">{isSyncing ? 'Sinkronisasi...' : 'Auto-Sync Status'}</span>
-            <span className="md:hidden">Sync</span>
+            <span className="hidden sm:inline">{isSyncing ? 'Sinkronisasi...' : 'Auto-Sync'}</span>
           </button>
 
           <button
             onClick={onOpenNewModal}
-            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 active:scale-95 transition-all cursor-pointer min-h-[38px]"
           >
             <Plus className="w-4 h-4" />
-            <span>Reservasi Baru</span>
+            <span className="hidden sm:inline">Reservasi Baru</span>
+            <span className="sm:hidden">Baru</span>
           </button>
         </div>
       </div>

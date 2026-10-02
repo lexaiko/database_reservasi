@@ -18,9 +18,12 @@ import {
   Layers,
   ArrowRight,
   TrendingUp,
-  Receipt,
   UserCheck,
   Building2,
+  Users,
+  User,
+  Hash,
+  ArrowLeft,
 } from 'lucide-react';
 import { HppView } from './HppView';
 
@@ -45,7 +48,7 @@ interface HppManagerViewProps {
 export default function HppManagerView({
   reservations,
   initialKode,
-  initialMode = 'detail',
+  initialMode = 'katalog',
   onModeChange,
   onRefreshData,
   onSuccess,
@@ -348,72 +351,32 @@ export default function HppManagerView({
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      {/* 1. PAGE HEADER HERO WITH TOP-RIGHT MODE SWITCHER */}
-      <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        {/* Left: Title & Context */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 flex items-center justify-center shrink-0">
-            <Receipt size={20} />
-          </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-black font-heading text-foreground tracking-tight">
-              Pusat Status &amp; HPP Tamu
-            </h1>
-            <p className="text-xs text-muted-foreground font-medium">
-              {activeMode === 'update'
-                ? 'Formulir pembaruan status pembayaran dan rincian pengeluaran vendor per tamu'
-                : activeMode === 'detail'
-                ? 'Laporan resmi rincian pengeluaran operasional vendor, gross profit, dan margin trip'
-                : 'Ringkasan terpusat seluruh data HPP reservasi trip dan akumulasi margin operasional'}
-            </p>
-          </div>
-        </div>
-
-        {/* Right: SEGMENTED MODE SWITCHER (KANAN ATAS) */}
-        <div className="inline-flex p-1 bg-muted/60 dark:bg-slate-800/80 rounded-xl border border-border/80 shadow-xs self-start md:self-auto shrink-0 flex-wrap sm:flex-nowrap gap-1">
-          <button
-            type="button"
-            onClick={() => handleSwitchMode('update')}
-            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeMode === 'update'
-                ? 'bg-primary text-primary-foreground shadow-xs font-extrabold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-            }`}
-          >
-            <Edit3 size={14} />
-            <span>Update Status &amp; HPP</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSwitchMode('detail')}
-            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeMode === 'detail'
-                ? 'bg-primary text-primary-foreground shadow-xs font-extrabold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-            }`}
-          >
-            <FileText size={14} />
-            <span>Detail HPP</span>
-          </button>
-
+      {/* Back header: only shown when in Detail or Update mode */}
+      {activeMode !== 'katalog' && (
+        <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => handleSwitchMode('katalog')}
-            className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeMode === 'katalog'
-                ? 'bg-primary text-primary-foreground shadow-xs font-extrabold'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-            }`}
+            className="inline-flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-extrabold transition-all cursor-pointer shadow-2xs active:scale-98 shrink-0"
           >
-            <Layers size={14} />
-            <span>Semua data HPP</span>
+            <ArrowLeft size={16} className="shrink-0" />
+            <span className="sm:hidden">Semua HPP</span>
+            <span className="hidden sm:inline">Kembali ke Semua data HPP</span>
           </button>
-        </div>
-      </div>
 
-      {/* 2. SEARCH BAR: CEK TAMU / PILIH RESERVASI (Only in Update & Detail Mode) */}
-      {activeMode !== 'katalog' && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-muted-foreground hidden sm:inline">
+              Mode: {activeMode === 'detail' ? 'Laporan Detail HPP' : 'Update Status & HPP'}
+            </span>
+            <span className="text-xs font-mono font-extrabold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/60 px-2.5 py-1 rounded-lg border border-orange-200/60 dark:border-orange-900/40">
+              {activeKode}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* 2. SEARCH BAR: ONLY SHOWN IF NO GUEST SELECTED IN DETAIL/UPDATE */}
+      {activeMode !== 'katalog' && !selectedReservasi && (
         <div className="bg-card border border-border rounded-2xl p-5 shadow-xs relative z-20">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-border/60">
             <div className="flex items-center gap-2.5">
@@ -542,14 +505,26 @@ export default function HppManagerView({
                     {selectedReservasi.paket}
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground font-medium">
-                  <span>👥 <strong>{selectedReservasi.pax}</strong> Pax</span>
-                  <span>🤵 PIC: <strong>{selectedReservasi.picAgen}</strong></span>
-                  <span>
-                    📅 Jadwal: <strong>{formatDateDisplay(selectedReservasi.startTrip)}</strong> s/d{' '}
-                    <strong>{formatDateDisplay(selectedReservasi.finishTrip)}</strong>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground font-medium">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-muted-foreground/70" />
+                    <span><strong>{selectedReservasi.pax}</strong> Pax</span>
                   </span>
-                  <span>📍 Baris #{selectedReservasi.rowNumber}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-muted-foreground/70" />
+                    <span>PIC: <strong>{selectedReservasi.picAgen}</strong></span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" />
+                    <span>
+                      Jadwal: <strong>{formatDateDisplay(selectedReservasi.startTrip)}</strong> s/d{' '}
+                      <strong>{formatDateDisplay(selectedReservasi.finishTrip)}</strong>
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Hash className="w-3.5 h-3.5 text-muted-foreground/70" />
+                    <span>Baris #{selectedReservasi.rowNumber}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -673,7 +648,7 @@ export default function HppManagerView({
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 text-xs font-bold transition-all cursor-pointer self-start sm:self-auto"
+                className="w-full sm:w-auto min-h-[40px] sm:min-h-0 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 text-xs font-bold transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Tambah Biaya</span>
@@ -803,14 +778,15 @@ export default function HppManagerView({
                       </div>
 
                       {/* 5. Delete Action */}
-                      <div className="sm:col-span-1 flex justify-end">
+                      <div className="sm:col-span-1 flex justify-end sm:justify-center">
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(it.id)}
-                          className="p-2 text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-all cursor-pointer"
+                          className="w-full sm:w-auto h-9 px-3 sm:px-2 inline-flex items-center justify-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 rounded-lg border border-rose-500/20 sm:border-transparent transition-all cursor-pointer"
                           title="Hapus baris ini"
                         >
                           <Trash2 className="w-4 h-4" />
+                          <span className="sm:hidden font-bold">Hapus Biaya</span>
                         </button>
                       </div>
                     </div>
@@ -834,11 +810,11 @@ export default function HppManagerView({
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 self-stretch sm:self-auto flex-wrap sm:flex-nowrap">
+            <div className="flex flex-col-reverse sm:flex-row items-center gap-2.5 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => handleSwitchMode('detail')}
-                className="py-3.5 px-4 rounded-xl text-foreground font-bold text-xs bg-muted/70 hover:bg-muted border border-border transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                className="w-full sm:w-auto min-h-[44px] sm:min-h-0 py-3 sm:py-3.5 px-4 rounded-xl text-foreground font-bold text-xs bg-muted/70 hover:bg-muted border border-border transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                 title="Buka format laporan resmi HPP"
               >
                 <FileText size={15} />
@@ -849,7 +825,7 @@ export default function HppManagerView({
                 type="button"
                 onClick={handleSaveHpp}
                 disabled={isSaving || isLoadingHpp || !selectedReservasi}
-                className="py-3.5 px-6 rounded-xl text-white font-extrabold text-xs sm:text-sm bg-orange-600 hover:bg-orange-700 shadow-md shadow-orange-600/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer flex-1 sm:flex-initial"
+                className="w-full sm:w-auto min-h-[44px] sm:min-h-0 py-3 sm:py-3.5 px-6 rounded-xl text-white font-extrabold text-xs sm:text-sm bg-orange-600 hover:bg-orange-700 shadow-md shadow-orange-600/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isSaving ? (
                   <>
@@ -872,32 +848,33 @@ export default function HppManagerView({
       {activeMode === 'detail' && selectedReservasi && (
         <div className="space-y-5 animate-fade-in" id="printable-hpp-report">
           {/* Action Bar: Print & Edit */}
-          <div className="flex items-center justify-between no-print">
-            <span className="text-xs font-bold text-muted-foreground">
-              📄 Laporan Rincian Biaya Operasional Trip
-            </span>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print">
+            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+              <FileText className="w-4 h-4 text-orange-600 dark:text-orange-400 shrink-0" />
+              <span>Laporan Rincian Biaya Operasional Trip</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer min-h-[42px] sm:min-h-0"
               >
-                <Printer size={14} />
+                <Printer size={15} />
                 <span>Cetak / Print</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleSwitchMode('update')}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer min-h-[42px] sm:min-h-0"
               >
-                <Edit3 size={14} />
+                <Edit3 size={15} />
                 <span>Edit HPP Ini</span>
               </button>
             </div>
           </div>
 
           {/* Laporan Card Shell */}
-          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="bg-card border border-border rounded-2xl p-4 sm:p-8 shadow-xs space-y-6">
             {/* Report Header */}
             <div className="border-b border-border pb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -947,12 +924,53 @@ export default function HppManagerView({
               </div>
             )}
 
-            {/* Tabel Rincian */}
+            {/* Rincian Transaksi Pengeluaran Vendor (UX-Optimized for Mobile) */}
             <div>
               <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                 Daftar Transaksi Pengeluaran Vendor
               </span>
-              <div className="border border-border rounded-xl overflow-hidden">
+
+              {/* Mobile View: Clean, Readable Item Feed */}
+              <div className="block md:hidden divide-y divide-border/60 rounded-xl border border-border bg-card p-3">
+                {items.filter((it) => parseCurrency(it.nominalStr) > 0).length === 0 ? (
+                  <div className="py-6 text-center text-muted-foreground italic text-xs">
+                    Belum ada data pengeluaran HPP yang dicatat untuk tamu ini.
+                  </div>
+                ) : (
+                  items
+                    .filter((it) => parseCurrency(it.nominalStr) > 0)
+                    .map((it, idx) => (
+                      <div key={it.id} className="py-2.5 first:pt-0 last:pb-0 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="w-5 h-5 rounded-full bg-muted text-[10px] font-extrabold text-muted-foreground flex items-center justify-center shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="font-extrabold text-xs text-foreground bg-muted/60 px-2 py-0.5 rounded-md border border-border/50">
+                              {it.kategori}
+                            </span>
+                            {it.vendor && (
+                              <span className="text-xs font-bold text-foreground">
+                                {it.vendor}
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-black text-xs text-orange-600 dark:text-orange-400 tabular-nums shrink-0">
+                            {formatRupiah(parseCurrency(it.nominalStr))}
+                          </span>
+                        </div>
+                        {it.catatan && (
+                          <p className="text-[11px] text-muted-foreground pl-6.5">
+                            {it.catatan}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                )}
+              </div>
+
+              {/* Desktop & Print View: Standard Table */}
+              <div className="hidden md:block print:block border border-border rounded-xl overflow-hidden">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-muted/60 text-muted-foreground font-bold border-b border-border">
                     <tr>
@@ -999,30 +1017,30 @@ export default function HppManagerView({
             </div>
 
             {/* Financial Bottom Line Card */}
-            <div className="pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div className="pt-4 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
               <div className="p-3.5 rounded-xl bg-muted/40 border border-border">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-0.5">
-                  Nilai Tagihan Tamu (X)
+                  Nilai Tagihan (X)
                 </span>
-                <span className="text-base font-black text-foreground tabular-nums">
+                <span className="text-sm sm:text-base font-black text-foreground tabular-nums block truncate">
                   {formatRupiah(nilaiOrder)}
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-orange-500/10 border border-orange-500/20">
                 <span className="text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase block mb-0.5">
-                  Total Pengeluaran HPP (AE)
+                  Total HPP (AE)
                 </span>
-                <span className="text-base font-black text-orange-600 dark:text-orange-400 tabular-nums">
+                <span className="text-sm sm:text-base font-black text-orange-600 dark:text-orange-400 tabular-nums block truncate">
                   {formatRupiah(totalHpp)}
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                 <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase block mb-0.5">
-                  Estimasi Gross Profit (AF)
+                  Gross Profit (AF)
                 </span>
-                <span className="text-base font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 tabular-nums block truncate">
                   {formatRupiah(profit)}
                 </span>
               </div>
@@ -1031,7 +1049,7 @@ export default function HppManagerView({
                 <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-0.5">
                   Gross Margin (%) (AG)
                 </span>
-                <span className="text-base font-black text-foreground tabular-nums">
+                <span className="text-sm sm:text-base font-black text-foreground tabular-nums block truncate">
                   {totalHpp > 0 ? `${margin}%` : '0%'}
                 </span>
               </div>
