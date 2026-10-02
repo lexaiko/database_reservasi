@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* VARIABEL TEMA */
+        :root {
+            --primary: #f97316;
+            /* Orange 500 */
+            --primary-hover: #ea580c;
+            /* Orange 600 */
+            --bg-color: #f1f5f9;
+            /* Slate 100 */
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 30px 15px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        /* BRAND HEADER BANYUWANGI */
+        .brand-header {
+            background: linear-gradient(135deg, var(--primary), #fb923c);
+            color: white;
+            padding: 35px 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3);
+        }
+
+        .brand-header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-header p {
+            margin: 5px 0 0 0;
+            font-size: 15px;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        /* CARD STYLE MODERN */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px dashed #fed7aa;
+        }
+
+        /* GRID SYSTEM */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea {
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: #f8fafc;
+            color: var(--text-main);
+        }
+
+        /* STYLING DROPDOWN (SELECT) LEBIH ELEGAN */
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            cursor: pointer;
+            /* Ikon Panah Orange Kustom */
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f97316' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+            padding-right: 40px;
+            /* Ruang untuk ikon panah */
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
+            outline: none;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        /* CHECKBOX & SCROLLBOX ELEGAN */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .scrollbox {
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            background: #f8fafc;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .scrollbox::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scrollbox::-webkit-scrollbar-thumb {
+            background-color: #fdba74;
+            border-radius: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0;
+            color: #475569;
+            padding: 4px 0;
+            transition: color 0.2s;
+        }
+
+        .checkbox-item:hover {
+            color: var(--primary);
+        }
+
+        .checkbox-item input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--primary);
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        /* TOMBOL GRADIENT */
+        button {
+            background: linear-gradient(135deg, var(--primary), #f59e0b);
+            color: white;
+            border: none;
+            padding: 18px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            font-family: inherit;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.4);
+            letter-spacing: 0.5px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.5);
+        }
+
+        button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            color: #94a3b8;
+        }
+
+        #status {
+            margin-top: 25px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .success {
+            color: #15803d;
+            background: #dcfce7;
+            border: 1px solid #bbf7d0;
+        }
+
+        .error {
+            color: #b91c1c;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+        }
+
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 15px 10px;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .card {
+                padding: 20px 15px;
+            }
+
+            .brand-header {
+                padding: 25px 15px;
+            }
+
+            .brand-header h1 {
+                font-size: 24px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .scrollbox {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="brand-header">
+            <h1>Trip Banyuwangi</h1>
+            <p>Sistem Input Database Reservasi 2026</p>
+        </div>
+
+        <form id="resForm" onsubmit="event.preventDefault(); submitData();">
+
+            <!-- CARD 1: INFORMASI DASAR TAMU -->
+            <div class="card">
+                <div class="card-title">Informasi Dasar Tamu</div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Kode Reservasi</label><input type="text" name="kode" required></div>
+                    <div class="form-group"><label>Nama Tamu</label><input type="text" name="nama_tamu" required></div>
+                    <div class="form-group"><label>WhatsApp</label><input type="text" name="whatsapp"></div>
+                    <div class="form-group"><label>Instagram</label><input type="text" name="instagram"></div>
+                    <div class="form-group"><label>TikTok</label><input type="text" name="tiktok"></div>
+                </div>
+            </div>
+
+            <!-- CARD 2: DETAIL PERJALANAN -->
+            <div class="card">
+                <div class="card-title">Detail Perjalanan</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Start Trip</label>
+                        <input type="date" name="start_trip">
+                        <div class="hint">Tanggal kedatangan / mulai trip.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Finish Trip</label>
+                        <input type="date" name="finish_trip">
+                        <div class="hint">Tanggal kepulangan / selesai trip.</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Trip (Jumlah Hari)</label>
+                        <input type="number" name="trip" placeholder="Cth: 3">
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah Pax</label>
+                        <input type="number" name="pax" placeholder="Cth: 2" required>
+                        <div class="hint">Jumlah peserta / tamu.</div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Paket Trip</label>
+                        <select name="paket">
+                            <option value="">-- Pilih Paket --</option>
+                            <option value="1D I">1D I</option>
+                            <option value="1D M, T">1D M, T</option>
+                            <option value="1D D, B">1D D, B</option>
+                            <option value="1D I, B">1D I, B</option>
+                            <option value="1D KW">1D KW</option>
+                            <option value="1D PM">1D PM</option>
+                            <option value="1D AP">1D AP</option>
+                            <option value="1D M, B">1D M, B</option>
+                            <option value="1D I, KW">1D I, KW</option>
+                            <option value="1D I, D">1D I, D</option>
+                            <option value="1D B">1D B</option>
+                            <option value="1D PB">1D PB</option>
+                            <option value="1D KW, B">1D KW, B</option>
+                            <option value="1D TI">1D TI</option>
+                            <option value="1D B, D, PM">1D B, D, PM</option>
+                            <option value="1D Z">1D Z</option>
+                            <option value="2H1M A">2H1M A</option>
+                            <option value="2H1M B">2H1M B</option>
+                            <option value="2H1M C">2H1M C</option>
+                            <option value="2H1M D">2H1M D</option>
+                            <option value="2H1M Z">2H1M Z</option>
+                            <option value="3H2M A">3H2M A</option>
+                            <option value="3H2M B">3H2M B</option>
+                            <option value="3H2M Z">3H2M Z</option>
+                            <option value="4H3M">4H3M</option>
+                            <option value="OT I">OT I</option>
+                            <option value="OT MT">OT MT</option>
+                            <option value="OT DB">OT DB</option>
+                            <option value="OT PM">OT PM</option>
+                            <option value="OT D">OT D</option>
+                            <option value="OT B">OT B</option>
+                            <option value="OT TI">OT TI</option>
+                            <option value="OT IB">OT IB</option>
+                            <option value="OT 3E">OT 3E</option>
+                        </select>
+                    </div>
+
+                    <!-- DAY 1 - DAY 4 -->
+                    <div class="form-group">
+                        <label>Day 1</label>
+                        <div class="scrollbox">
+                            <script>
+                                const destList = ["D", "MU", "PM", "I", "B", "M", "T", "KW", "CT", "AP", "PB", "GI", "WI", "J", "WB", "TGT", "DK", "ABN", "KKG", "RS", "ATV", "TI", "OT", "Pick up", "Drop off"];
+                                destList.forEach(d => { document.write(`<label class="checkbox-item"><input type="checkbox" name="day1" value="${d}"> ${d}</label>`); });
+                            </script>
+                        </div>
+                        <div class="hint">Centang destinasi (bisa >1)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Day 2</label>
+                        <div class="scrollbox">
+                            <script>
+                                destList.forEach(d => { document.write(`<label class="checkbox-item"><input type="checkbox" name="day2" value="${d}"> ${d}</label>`); });
+                            </script>
+                        </div>
+                        <div class="hint">Centang destinasi (bisa >1)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Day 3</label>
+                        <div class="scrollbox">
+                            <script>
+                                destList.forEach(d => { document.write(`<label class="checkbox-item"><input type="checkbox" name="day3" value="${d}"> ${d}</label>`); });
+                            </script>
+                        </div>
+                        <div class="hint">Centang destinasi (bisa >1)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Day 4</label>
+                        <div class="scrollbox">
+                            <script>
+                                destList.forEach(d => { document.write(`<label class="checkbox-item"><input type="checkbox" name="day4" value="${d}"> ${d}</label>`); });
+                            </script>
+                        </div>
+                        <div class="hint">Centang destinasi (bisa >1)</div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Hotel (Bisa pilih lebih dari satu)</label>
+                        <div class="checkbox-grid">
+                            <script>
+                                const hotelList = ["Luminor", "Illira", "Santika", "Ketapang Indah", "Solong", "Dialoog", "Aston", "El Royale", "Kokoon", "Grand Harvest", "Teras Ijen", "Votel Manyar", "Harmony Homestay", "Sultan GH", "Winstar", "Lainnya"];
+                                hotelList.forEach(h => { document.write(`<label class="checkbox-item"><input type="checkbox" name="hotel" value="${h}"> ${h}</label>`); });
+                            </script>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Catatan Operasional & Hotel</label>
+                        <textarea name="catatan" rows="3" placeholder="Ketik catatan khusus di sini..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: PIC & LEADS -->
+            <div class="card">
+                <div class="card-title">PIC & Leads</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>PIC Agen</label>
+                        <select name="pic_agen">
+                            <option value="">-- Pilih PIC --</option>
+                            <option value="Dela">Dela</option>
+                            <option value="Alvin">Alvin</option>
+                            <option value="Holiday">Holiday</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Sumber Leads</label>
+                        <select name="sumber_leads">
+                            <option value="">-- Pilih Sumber --</option>
+                            <option value="Website">Website</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="Tiktok">Tiktok</option>
+                            <option value="Rekomendasi">Rekomendasi</option>
+                            <option value="Repeat Order">Repeat Order</option>
+                            <option value="Belum Tahu">Belum Tahu</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 4: KEUANGAN & PEMBAYARAN -->
+            <div class="card">
+                <div class="card-title">Keuangan & Pembayaran</div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Nilai Order</label>
+                        <input type="text" class="format-uang" name="nilai_order" placeholder="Cth: 1.500.000">
+                        <div class="hint">Total harga (titik otomatis menyesuaikan).</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah DP</label>
+                        <input type="text" class="format-uang" name="dp" placeholder="Cth: 500.000">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Tanggal DP</label>
+                        <input type="date" name="tgl_dp">
+                        <div class="hint">Tanggal tamu melakukan transfer DP.</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="btnSubmit">Simpan & Sync Kalender 🚀</button>
+            <div id="status"></div>
+        </form>
+    </div>
+
+    <script>
+        // SCRIPT: FORMAT UANG OTOMATIS (Kasih Titik Saat Ngetik)
+        document.querySelectorAll('.format-uang').forEach(function (input) {
+            input.addEventListener('input', function (e) {
+                // Hapus semua karakter selain angka
+                let value = e.target.value.replace(/[^0-9]/g, '');
+                if (value !== '') {
+                    // Format angka dengan titik standar Indonesia
+                    e.target.value = parseInt(value, 10).toLocaleString('id-ID');
+                } else {
+                    e.target.value = '';
+                }
+            });
+        });
+
+        function submitData() {
+            const btn = document.getElementById("btnSubmit");
+            const status = document.getElementById("status");
+            btn.disabled = true;
+            btn.innerText = "⏳ Sedang menyimpan ke Sheet & Kalender...";
+            status.innerText = "";
+
+            const form = document.getElementById("resForm");
+            const formData = new FormData(form);
+            const data = {};
+
+            formData.forEach((value, key) => {
+                if (!data[key]) { data[key] = value; }
+                else { data[key] += ", " + value; }
+            });
+
+            // INI PENTING: Membersihkan titik pada nominal uang sebelum dikirim ke Spreadsheet
+            if (data.nilai_order) data.nilai_order = data.nilai_order.replace(/\./g, '');
+            if (data.dp) data.dp = data.dp.replace(/\./g, '');
+
+            google.script.run
+                .withSuccessHandler(res => {
+                    status.innerText = res;
+                    status.className = res.includes("✅") ? "success" : "error";
+                    btn.disabled = false;
+                    btn.innerText = "Simpan & Sync Kalender 🚀";
+                    if (res.includes("✅")) form.reset();
+                })
+                .withFailureHandler(err => {
+                    status.innerText = "❌ ERROR: " + err.message;
+                    status.className = "error";
+                    btn.disabled = false;
+                    btn.innerText = "Coba Lagi";
+                })
+                .simpanData(data);
+        }
+    </script>
+</body>
+
+</html>

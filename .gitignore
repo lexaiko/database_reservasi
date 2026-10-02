@@ -1,0 +1,88 @@
+# ==============================================================================
+# TripBanyuwangi ERP & Database Reservasi - .gitignore
+# ==============================================================================
+
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Next.js & Build Outputs
+.next/
+out/
+build/
+dist/
+.turbo/
+
+# Secret Credentials & Environment Variables
+.env
+.env*.local
+.env.production
+.env.production.local
+.env.development.local
+.env.test.local
+service-account*.json
+credentials*.json
+token*.json
+*.pem
+*.key
+*.crt
+
+# Data Dumps & Offline Spreadsheets (Sensitive Booking/Customer Data)
+*.xlsx
+*.xls
+*.csv
+Database*.xlsx
+
+# Logs & Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Testing & Coverage
+/coverage
+*.lcov
+.nyc_output
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel Deployment
+.vercel
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE & Editor Settings
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Scratch & Temporary Folders
+scratch/
+tmp/
+temp/

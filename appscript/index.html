@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripBanyuwangi - Executive Space</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* =========================================
+       1. BASE & RESET (PREMIUM SAAS STYLE)
+       ========================================= */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #f97316;
+      --primary-dark: #c2410c;
+      --primary-light: #ffedd5;
+      --bg-body: #f1f5f9;
+      --surface: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+      --shadow-hover: 0 20px 40px -5px rgba(249, 115, 22, 0.15);
+      --radius: 20px;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      margin: 0;
+      padding-bottom: 60px;
+      overflow-x: hidden;
+    }
+
+    /* Animasi Masuk */
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-in {
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* =========================================
+       2. NAVBAR & HEADER
+       ========================================= */
+    .navbar {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      padding: 15px 40px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span {
+      background: linear-gradient(135deg, var(--primary), #fb923c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .user-profile {
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--text-main);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 50px;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .page-header {
+      margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .page-header p {
+      margin: 5px 0 0 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* =========================================
+       3. KPI METRICS (FLOATING CARDS)
+       ========================================= */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 25px;
+      box-shadow: var(--shadow-md);
+      transition: 0.4s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .kpi-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .kpi-val {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .val-gradient {
+      background: linear-gradient(135deg, var(--primary), #fb923c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* =========================================
+       4. BENTO GRID CHARTS (MODERN LAYOUT)
+       ========================================= */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 50px;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 25px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    .chart-header {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chart-header::before {
+      content: "";
+      display: block;
+      width: 4px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 4px;
+    }
+
+    .chart-wrapper {
+      flex-grow: 1;
+      position: relative;
+      min-height: 250px;
+    }
+
+    /* Span pengatur layout */
+    .span-2 {
+      grid-column: span 2;
+    }
+
+    @media (max-width: 1024px) {
+      .bento-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .span-2 {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .span-2 {
+        grid-column: span 1;
+      }
+    }
+
+    /* =========================================
+       5. DATA TABLE (CLEAN UI)
+       ========================================= */
+    .table-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 30px;
+      border: 1px solid rgba(0, 0, 0, 0.02);
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex-grow: 1;
+      max-width: 400px;
+    }
+
+    .search-wrapper input {
+      width: 100%;
+      padding: 14px 20px 14px 45px;
+      border-radius: 50px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-family: inherit;
+      font-size: 14px;
+      transition: 0.3s;
+      outline: none;
+    }
+
+    .search-wrapper input:focus {
+      background: white;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.5;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border-radius: 50px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--text-main);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #334155;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-outline {
+      background: white;
+      border: 1px solid #e2e8f0;
+      color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+      text-align: left;
+    }
+
+    th,
+    td {
+      padding: 18px 20px;
+      font-size: 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background: #fcfcfc;
+    }
+
+    .status-pill {
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-block;
+    }
+
+    .action-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+
+    .action-btn.view {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .action-btn.view:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .action-btn.edit {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+    }
+
+    .action-btn.edit:hover {
+      background: #fed7aa;
+    }
+
+    /* =========================================
+       6. MODAL & FORMS (OVERLAY)
+       ========================================= */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: #f8fafc;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .modal-content::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    .modal-header-bar {
+      background: white;
+      padding: 24px 35px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header-bar h2 {
+      margin: 0;
+      color: var(--text-main);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .btn-close {
+      background: #f1f5f9;
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      color: #64748b;
+      transition: 0.2s;
+    }
+
+    .btn-close:hover {
+      background: #fee2e2;
+      color: #ef4444;
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 35px;
+    }
+
+    /* Form Cards inside Modal */
+    .form-card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 25px;
+      border: 1px solid #e2e8f0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-card-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-card-title::before {
+      content: "";
+      display: block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-muted);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #f8fafc;
+      transition: 0.3s;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .scrollbox {
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 15px;
+      background: #f8fafc;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .scrollbox::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scrollbox::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+
+    .checkbox-item input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
+
+    /* Detail Grid UI */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .detail-section {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .detail-header {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    .dl-item {
+      margin-bottom: 16px;
+    }
+
+    .dl-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .dl-value {
+      display: block;
+      font-size: 15px;
+      color: var(--text-main);
+      font-weight: 600;
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid #f1f5f9;
+    }
+
+    #loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 60vh;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--primary-light);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 768px) {
+
+      .grid-2,
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .checkbox-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="navbar">
+    <div class="logo">Trip<span>Banyuwangi</span></div>
+    <div class="user-profile">Admin Workspace</div>
+  </div>
+
+  <div id="loader">
+    <div class="spinner"></div> Sinkronisasi Data...
+  </div>
+
+  <div class="container animate-in" id="mainUI" style="display: none; animation-delay: 0.1s;">
+
+    <div class="page-header">
+      <h1>Dashboard Eksekutif</h1>
+      <p>Ringkasan performa penjualan dan operasional secara real-time.</p>
+    </div>
+
+    <!-- 1. KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header"><span class="kpi-title">Total Leads</span>
+          <div class="kpi-icon" style="background:#e0f2fe; color:#0284c7;">👥</div>
+        </div>
+        <div class="kpi-val" id="val_penjualan">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span class="kpi-title">Jumlah Tamu (Pax)</span>
+          <div class="kpi-icon" style="background:#f3e8ff; color:#9333ea;">🎒</div>
+        </div>
+        <div class="kpi-val" id="val_pax">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span class="kpi-title">Total Revenue</span>
+          <div class="kpi-icon" style="background:#ffedd5; color:#ea580c;">💎</div>
+        </div>
+        <div class="kpi-val val-gradient" id="val_revenue">Rp 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span class="kpi-title">Gross Profit</span>
+          <div class="kpi-icon" style="background:#dcfce7; color:#16a34a;">📈</div>
+        </div>
+        <div class="kpi-val" id="val_gprofit">Rp 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span class="kpi-title">Gross Margin</span>
+          <div class="kpi-icon" style="background:#f1f5f9; color:#475569;">📊</div>
+        </div>
+        <div class="kpi-val" id="val_gmargin">0%</div>
+      </div>
+    </div>
+
+    <!-- 2. BENTO GRID CHARTS -->
+    <div class="bento-grid">
+
+      <div class="chart-card span-2">
+        <div class="chart-header">Tren Penjualan (Bulanan)</div>
+        <div class="chart-wrapper"><canvas id="chartTren"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">Top 5 Paket</div>
+        <div class="chart-wrapper"><canvas id="chartPaket"></canvas></div>
+      </div>
+
+      <div class="chart-card span-2">
+        <div class="chart-header">Top 10 Client Corporate/Personal</div>
+        <div class="chart-wrapper"><canvas id="chartClient"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">Kontribusi AOV</div>
+        <div class="chart-wrapper" style="display:flex; flex-direction:column; gap:20px;">
+          <div style="flex:1; position:relative; min-height:160px;"><canvas id="chartPic"></canvas></div>
+          <div style="flex:1; position:relative; min-height:160px;"><canvas id="chartSrc"></canvas></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. DATA TABLE -->
+    <div class="table-section">
+      <div class="page-header" style="margin-bottom: 20px;">
+        <h1 style="font-size: 22px;">Database Reservasi</h1>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="Ketik kode atau nama tamu..." onkeyup="filterTable()">
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="resetAndLoad()">🔄 Segarkan</button>
+          <button class="btn btn-primary" onclick="bukaModalBaru()">+ Reservasi Baru</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th width="12%">ID Trip</th>
+              <th width="25%">Nama Pemesan</th>
+              <th width="10%">Pax</th>
+              <th width="20%">Paket</th>
+              <th width="15%">Status</th>
+              <th width="18%" style="text-align: center;">Tindakan</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div style="text-align: center; margin-top: 25px;">
+        <button class="btn btn-outline" id="btnLoadMore" onclick="loadMore()" style="margin: 0 auto;">Muat Data
+          Sebelumnya</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL FORM EDIT/BARU -->
+  <div class="modal" id="formModal">
+    <div class="modal-content">
+      <div class="modal-header-bar">
+        <h2 id="modalTitle">Edit Reservasi</h2>
+        <button class="btn-close" onclick="tutupModal('formModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="mainForm" onsubmit="event.preventDefault(); simpanDataFull();">
+          <input type="hidden" name="baris" id="f_baris">
+
+          <div class="form-card">
+            <div class="form-card-title">Profil Tamu</div>
+            <div class="grid-2">
+              <div class="form-group"><label>Kode Unik</label><input type="text" name="kode" id="f_kode" required></div>
+              <div class="form-group"><label>Nama Lengkap</label><input type="text" name="nama_tamu" id="f_nama"
+                  required></div>
+              <div class="form-group"><label>WhatsApp</label><input type="text" name="whatsapp" id="f_wa"></div>
+              <div class="form-group"><label>Instagram</label><input type="text" name="instagram" id="f_ig"></div>
+              <div class="form-group"><label>TikTok</label><input type="text" name="tiktok" id="f_tiktok"></div>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card-title">Manajemen Itinerary</div>
+            <div class="grid-2">
+              <div class="form-group"><label>Tanggal Mulai</label><input type="date" name="start_trip" id="f_start">
+              </div>
+              <div class="form-group"><label>Tanggal Selesai</label><input type="date" name="finish_trip" id="f_finish">
+              </div>
+              <div class="form-group"><label>Durasi (Hari)</label><input type="number" name="trip" id="f_trip"></div>
+              <div class="form-group"><label>Jumlah Peserta</label><input type="number" name="pax" id="f_pax" required>
+              </div>
+              <div class="form-group full-width"><label>Kategori Paket</label><select name="paket" id="f_paket">
+                  <option value="">-- Pilih Paket --</option>
+                  <option value="1D I">1D I</option>
+                  <option value="1D I, B">1D I, B</option>
+                  <option value="1D KW">1D KW</option>
+                  <option value="2H1M A">2H1M A</option>
+                  <option value="3H2M A">3H2M A</option>
+                  <option value="OT I">OT I</option>
+                  <option value="Lainnya">Lainnya (Custom)</option>
+                </select></div>
+              <div class="form-group"><label>Destinasi Hari 1</label>
+                <div class="scrollbox" id="box_day1"></div>
+              </div>
+              <div class="form-group"><label>Destinasi Hari 2</label>
+                <div class="scrollbox" id="box_day2"></div>
+              </div>
+              <div class="form-group"><label>Destinasi Hari 3</label>
+                <div class="scrollbox" id="box_day3"></div>
+              </div>
+              <div class="form-group"><label>Destinasi Hari 4</label>
+                <div class="scrollbox" id="box_day4"></div>
+              </div>
+              <div class="form-group full-width"><label>Akomodasi Hotel</label>
+                <div class="checkbox-grid" id="box_hotel"></div>
+              </div>
+              <div class="form-group full-width"><label>Catatan Ekstra</label><textarea name="catatan" id="f_catatan"
+                  rows="3"></textarea></div>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card-title">Tracking Leads</div>
+            <div class="grid-2">
+              <div class="form-group"><label>PIC Handling</label><select name="pic_agen" id="f_pic">
+                  <option value="">-- Pilih PIC --</option>
+                  <option value="Dela">Dela</option>
+                  <option value="Alvin">Alvin</option>
+                  <option value="Holiday">Holiday</option>
+                </select></div>
+              <div class="form-group"><label>Sumber Akuisisi</label><select name="sumber_leads" id="f_sumber">
+                  <option value="">-- Pilih Sumber --</option>
+                  <option value="Website">Website</option>
+                  <option value="Instagram">Instagram</option>
+                  <option value="Tiktok">Tiktok</option>
+                  <option value="Rekomendasi">Rekomendasi</option>
+                  <option value="Repeat Order">Repeat Order</option>
+                  <option value="Belum Tahu">Belum Tahu</option>
+                </select></div>
+            </div>
+          </div>
+
+          <div class="form-card" style="margin-bottom: 10px;">
+            <div class="form-card-title">Finansial & Pembayaran</div>
+            <div class="grid-2">
+              <div class="form-group"><label>Total Tagihan</label><input type="text" class="format-uang"
+                  name="nilai_order" id="f_nilai"></div>
+              <div class="form-group"><label>DP Dibayarkan</label><input type="text" class="format-uang" name="dp"
+                  id="f_dp"></div>
+              <div class="form-group"><label>Tanggal DP</label><input type="date" name="tgl_dp" id="f_tgldp"></div>
+              <div class="form-group" id="container_status"><label>Status Reservasi</label><select name="status"
+                  id="f_status">
+                  <option value="On Schedule (Not Ready)">On Schedule (Not Ready)</option>
+                  <option value="DP 1">DP 1</option>
+                  <option value="Lunas">Lunas</option>
+                  <option value="Done">Selesai (Done)</option>
+                  <option value="Cancel">Cancel / Refund</option>
+                </select></div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary"
+            style="width: 100%; justify-content: center; padding: 18px; font-size: 16px; margin-top: 20px; border-radius: 16px;"
+            id="btnSimpan">Simpan Perubahan Data</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETAIL -->
+  <div class="modal" id="detailModal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header-bar">
+        <h2>Rincian Trip</h2>
+        <button class="btn-close" onclick="tutupModal('detailModal')">&times;</button>
+      </div>
+      <div class="modal-body detail-grid" id="detailContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // INIT CHECKBOXES & FORMAT UANG
+    // ==========================================
+    const destList = ["D", "MU", "PM", "I", "B", "M", "T", "KW", "CT", "AP", "PB", "GI", "WI", "J", "WB", "TGT", "DK", "ABN", "KKG", "RS", "ATV", "TI", "OT", "Pick up", "Drop off"];
+    const hotelList = ["Luminor", "Illira", "Santika", "Ketapang Indah", "Solong", "Dialoog", "Aston", "El Royale", "Kokoon", "Grand Harvest", "Teras Ijen", "Votel Manyar", "Harmony Homestay", "Sultan GH", "Winstar", "Lainnya"];
+    function generateCheckboxes(cId, nAttr, list) { document.getElementById(cId).innerHTML = list.map(v => `<label class="checkbox-item"><input type="checkbox" name="${nAttr}" value="${v}"> ${v}</label>`).join(''); }
+    ['box_day1', 'box_day2', 'box_day3', 'box_day4'].forEach((id, i) => generateCheckboxes(id, `day${i + 1}`, destList));
+    generateCheckboxes('box_hotel', 'hotel', hotelList);
+
+    document.querySelectorAll('.format-uang').forEach(function (input) {
+      input.addEventListener('input', function (e) {
+        let value = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = value !== '' ? parseInt(value, 10).toLocaleString('id-ID') : '';
+      });
+    });
+
+    function formatRp(angka) { return "Rp " + parseInt(angka || 0).toLocaleString('id-ID'); }
+
+    // ==========================================
+    // LOAD DASHBOARD & TABLE ON START
+    // ==========================================
+    let currentOffset = 0; const limit = 10; let dashData = null;
+
+    window.onload = function () {
+      google.script.run.withSuccessHandler(res => {
+        dashData = res; isiAngkaKPI(); gambarGrafikModern();
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('mainUI').style.display = 'block';
+      }).getStatistikDashboard();
+      loadData(limit, 0);
+    };
+
+    function isiAngkaKPI() {
+      document.getElementById('val_penjualan').innerText = dashData.kpi.penjualan;
+      document.getElementById('val_pax').innerText = dashData.kpi.pax;
+      document.getElementById('val_revenue').innerText = formatRp(dashData.kpi.revenue);
+      document.getElementById('val_gprofit').innerText = formatRp(dashData.kpi.gprofit);
+      document.getElementById('val_gmargin').innerText = dashData.kpi.gmargin.toString().replace('.', ',') + "%";
+    }
+
+    function gambarGrafikModern() {
+      Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+      Chart.defaults.color = '#64748b';
+
+      const oBase = '#f97316';
+      const bgGrad = document.createElement('canvas').getContext('2d').createLinearGradient(0, 0, 0, 400);
+      bgGrad.addColorStop(0, 'rgba(249, 115, 22, 0.4)'); bgGrad.addColorStop(1, 'rgba(249, 115, 22, 0.0)');
+      const paletPie = ['#ea580c', '#f97316', '#fb923c', '#fdba74', '#ffedd5'];
+
+      new Chart(document.getElementById('chartTren'), {
+        type: 'line',
+        data: { labels: dashData.tren.map(i => i.label), datasets: [{ data: dashData.tren.map(i => i.val), borderColor: oBase, backgroundColor: bgGrad, fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0, pointHoverRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { padding: 12, callbacks: { label: c => formatRp(c.raw) } } }, scales: { x: { grid: { display: false } }, y: { border: { display: false }, grid: { color: '#f1f5f9' }, ticks: { callback: v => 'Rp' + (v / 1000000) + 'Jt' } } } }
+      });
+
+      new Chart(document.getElementById('chartPaket'), {
+        type: 'bar',
+        data: { labels: dashData.paket.map(i => i.name), datasets: [{ data: dashData.paket.map(i => i.val), backgroundColor: oBase, borderRadius: 8, barThickness: 20 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { border: { display: false }, grid: { color: '#f1f5f9' } } } }
+      });
+
+      new Chart(document.getElementById('chartClient'), {
+        type: 'bar',
+        data: { labels: dashData.client.map(i => i.name), datasets: [{ data: dashData.client.map(i => i.val), backgroundColor: oBase, borderRadius: 8, barThickness: 16 }] },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { padding: 12, callbacks: { label: c => formatRp(c.raw) } } }, scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { weight: '600', color: '#0f172a' } } } } }
+      });
+
+      new Chart(document.getElementById('chartPic'), {
+        type: 'pie',
+        data: { labels: dashData.aovPic.map(i => i.name), datasets: [{ data: dashData.aovPic.map(i => i.val), backgroundColor: paletPie, borderWidth: 2, borderColor: '#ffffff' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: c => formatRp(c.raw) } } } }
+      });
+
+      new Chart(document.getElementById('chartSrc'), {
+        type: 'pie',
+        data: { labels: dashData.aovSrc.map(i => i.name), datasets: [{ data: dashData.aovSrc.map(i => i.val), backgroundColor: paletPie, borderWidth: 2, borderColor: '#ffffff' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: c => formatRp(c.raw) } } } }
+      });
+    }
+
+    // ==========================================
+    // LOGIKA TABEL 
+    // ==========================================
+    function resetAndLoad() { document.getElementById('tableBody').innerHTML = '<tr><td colspan="6" align="center">Memuat ulang...</td></tr>'; currentOffset = 0; loadData(limit, 0); }
+    function loadData(lim, off) { google.script.run.withSuccessHandler(renderTable).getRingkasanData(lim, off); }
+    function loadMore() { currentOffset += limit; const btn = document.getElementById('btnLoadMore'); btn.innerText = "Memuat..."; google.script.run.withSuccessHandler(r => { renderTable(r, true); btn.innerText = "Muat Data Sebelumnya"; }).getRingkasanData(limit, currentOffset); }
+
+    function renderTable(data, append = false) {
+      const tbody = document.getElementById('tableBody');
+      if (!append) tbody.innerHTML = '';
+      if (data.length === 0 && !append) { tbody.innerHTML = '<tr><td colspan="6" align="center" style="padding: 40px; color:#94a3b8;">Belum ada data reservasi.</td></tr>'; document.getElementById('btnLoadMore').style.display = 'none'; return; }
+      if (data.length < limit) document.getElementById('btnLoadMore').style.display = 'none'; else document.getElementById('btnLoadMore').style.display = 'inline-block';
+
+      data.forEach(item => {
+        let bgStatus = item.status.includes('DP') ? '#fef08a' : (item.status.includes('Lunas') || item.status.includes('Done') ? '#bbf7d0' : '#f1f5f9');
+        let colorStatus = item.status.includes('DP') ? '#854d0e' : (item.status.includes('Lunas') || item.status.includes('Done') ? '#166534' : '#475569');
+        tbody.innerHTML += `<tr><td style="font-weight:800; color:var(--primary)">${item.kode}</td><td style="font-weight:600; color:var(--text-main)">${item.nama}</td><td>${item.pax} Org</td><td><span style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600;">${item.paket}</span></td><td><span class="status-pill" style="background:${bgStatus}; color:${colorStatus}">${item.status}</span></td><td style="text-align: center;"><div class="actions"><button class="action-btn view" onclick="lihatDetail(${item.baris})">Lihat</button><button class="action-btn edit" onclick="editData(${item.baris})">Edit</button></div></td></tr>`;
+      });
+    }
+
+    function filterTable() { let input = document.getElementById("searchInput").value.toUpperCase(); let rows = document.getElementById("tableBody").getElementsByTagName("tr"); for (let i = 0; i < rows.length; i++) { let txt = rows[i].textContent || rows[i].innerText; rows[i].style.display = txt.toUpperCase().indexOf(input) > -1 ? "" : "none"; } }
+
+    // ==========================================
+    // LOGIKA MODAL (LIHAT, EDIT, SIMPAN)
+    // ==========================================
+    function formatUangTampil(n) { let num = String(n).replace(/\D/g, ''); return num ? "Rp " + parseInt(num, 10).toLocaleString('id-ID') : "Rp 0"; }
+    function convertDate(str) { if (!str) return ""; let p = str.split("/"); return p.length === 3 ? "20" + p[2] + "-" + p[1] + "-" + p[0] : ""; }
+    function setCheckboxes(name, vStr) { let cbs = document.querySelectorAll(`input[name="${name}"]`); cbs.forEach(cb => cb.checked = false); if (!vStr) return; let arr = vStr.split(',').map(s => s.trim()); cbs.forEach(cb => { if (arr.includes(cb.value)) cb.checked = true; }); }
+    function tutupModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function lihatDetail(baris) {
+      google.script.run.withSuccessHandler(r => {
+        document.getElementById('detailContent').innerHTML = `
+          <div class="detail-section"><div class="detail-header">Informasi Personal</div><div class="dl-item"><span class="dl-label">ID Reservasi</span><span class="dl-value" style="color:var(--primary); font-size:18px;">${r.kode}</span></div><div class="dl-item"><span class="dl-label">Nama Lengkap</span><span class="dl-value">${r.nama}</span></div><div class="dl-item"><span class="dl-label">Kontak & Sosmed</span><span class="dl-value">WA: ${r.wa || '-'}<br>IG: ${r.ig || '-'}<br>TK: ${r.tiktok || '-'}</span></div><div class="dl-item"><span class="dl-label">PIC / Sumber</span><span class="dl-value">${r.pic || '-'} / ${r.sumber || '-'}</span></div></div>
+          <div class="detail-section"><div class="detail-header">Detail Trip</div><div class="dl-item"><span class="dl-label">Paket Spesifikasi</span><span class="dl-value">${r.paket || '-'} (${r.pax} Org) - ${r.trip || '-'} Hari</span></div><div class="dl-item"><span class="dl-label">Jadwal Pelaksanaan</span><span class="dl-value">${r.start || '-'} s.d ${r.finish || '-'}</span></div><div class="dl-item"><span class="dl-label">Akomodasi</span><span class="dl-value">${r.hotel || '-'}</span></div><div class="dl-item"><span class="dl-label">Catatan Operasional</span><span class="dl-value" style="background:#fff7ed; border-color:#ffedd5;">${r.catatan || 'Tidak ada catatan khusus.'}</span></div></div>
+          <div class="detail-section"><div class="detail-header">Itinerary Harian</div><div class="dl-item"><span class="dl-label">Hari ke-1</span><span class="dl-value">${r.day1 || '-'}</span></div><div class="dl-item"><span class="dl-label">Hari ke-2</span><span class="dl-value">${r.day2 || '-'}</span></div><div class="dl-item"><span class="dl-label">Hari ke-3</span><span class="dl-value">${r.day3 || '-'}</span></div><div class="dl-item"><span class="dl-label">Hari ke-4</span><span class="dl-value">${r.day4 || '-'}</span></div></div>
+          <div class="detail-section" style="background: var(--text-main); border:none;"><div class="detail-header" style="color:white; border-bottom-color:#334155;">Status Keuangan</div><div class="dl-item"><span class="dl-label" style="color:#94a3b8;">Nilai Tagihan</span><span class="dl-value" style="background:#334155; color:white; border:none; font-size:18px;">${formatUangTampil(r.nilai)}</span></div><div class="dl-item"><span class="dl-label" style="color:#94a3b8;">Dana Masuk (DP)</span><span class="dl-value" style="background:#334155; color:#10b981; border:none;">${formatUangTampil(r.dp)}</span></div><div class="dl-item" style="margin-top: 20px;"><span class="dl-label" style="color:#94a3b8;">Status</span><div><span class="status-pill" style="background:var(--primary); color:white;">${r.status}</span></div></div></div>
+        `;
+        document.getElementById('detailModal').style.display = 'flex';
+      }).getDataLengkapByBaris(baris);
+    }
+
+    function editData(baris) {
+      document.getElementById('modalTitle').innerText = "Edit Data Reservasi"; document.getElementById('mainForm').reset(); document.getElementById('container_status').style.display = 'flex';
+      google.script.run.withSuccessHandler(r => {
+        document.getElementById('f_baris').value = r.baris; document.getElementById('f_kode').value = r.kode; document.getElementById('f_nama').value = r.nama; document.getElementById('f_wa').value = r.wa; document.getElementById('f_ig').value = r.ig; document.getElementById('f_tiktok').value = r.tiktok; document.getElementById('f_pax').value = r.pax; document.getElementById('f_trip').value = r.trip;
+        document.getElementById('f_start').value = convertDate(r.start); document.getElementById('f_finish').value = convertDate(r.finish);
+        let sPaket = document.getElementById('f_paket'); if (!Array.from(sPaket.options).some(o => o.value === r.paket) && r.paket) sPaket.add(new Option(r.paket, r.paket)); sPaket.value = r.paket;
+        document.getElementById('f_pic').value = r.pic || ""; document.getElementById('f_sumber').value = r.sumber || ""; document.getElementById('f_catatan').value = r.catatan;
+
+        let nV = r.nilai ? String(r.nilai).replace(/\D/g, '') : ''; document.getElementById('f_nilai').value = nV ? parseInt(nV).toLocaleString('id-ID') : '';
+        let dV = r.dp ? String(r.dp).replace(/\D/g, '') : ''; document.getElementById('f_dp').value = dV ? parseInt(dV).toLocaleString('id-ID') : '';
+        document.getElementById('f_tgldp').value = convertDate(r.tgl_dp);
+
+        let sStat = document.getElementById('f_status'); if (!Array.from(sStat.options).some(o => o.value === r.status) && r.status) sStat.add(new Option(r.status, r.status)); sStat.value = r.status || "On Schedule (Not Ready)";
+        ['day1', 'day2', 'day3', 'day4', 'hotel'].forEach(n => setCheckboxes(n, r[n]));
+        document.getElementById('formModal').style.display = 'flex';
+      }).getDataLengkapByBaris(baris);
+    }
+
+    function bukaModalBaru() {
+      document.getElementById('modalTitle').innerText = "Buat Reservasi Baru"; document.getElementById('mainForm').reset(); document.getElementById('f_baris').value = ''; document.getElementById('container_status').style.display = 'none';
+      ['day1', 'day2', 'day3', 'day4', 'hotel'].forEach(n => setCheckboxes(n, ''));
+      document.getElementById('formModal').style.display = 'flex';
+    }
+
+    function simpanDataFull() {
+      const btn = document.getElementById('btnSimpan'); btn.innerText = "Memproses..."; btn.disabled = true;
+      const fData = new FormData(document.getElementById('mainForm')); const d = {};
+      fData.forEach((v, k) => { d[k] = d[k] ? d[k] + ", " + v : v; });
+      if (d.nilai_order) d.nilai_order = d.nilai_order.replace(/\./g, ''); if (d.dp) d.dp = d.dp.replace(/\./g, '');
+      google.script.run.withSuccessHandler(res => {
+        alert(res); tutupModal('formModal'); btn.innerText = "Simpan Perubahan Data"; btn.disabled = false; resetAndLoad();
+      }).withFailureHandler(err => { alert("❌ Gagal: " + err.message); btn.innerText = "Coba Lagi"; btn.disabled = false; })[d.baris ? 'simpanEditLengkap' : 'simpanData'](d);
+    }
+  </script>
+</body>
+
+</html>

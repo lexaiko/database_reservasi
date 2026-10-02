@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #FFF5F0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .header {
+            background-color: #FF7F50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h2,
+        h3,
+        h4 {
+            margin: 0;
+            padding-bottom: 5px;
+        }
+
+        .info-tamu {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #FF7F50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #FFE4D6;
+            color: #D35400;
+            font-weight: 600;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+        }
+
+        .input-vendor-manual {
+            display: none;
+            margin-top: 5px;
+            background-color: #fffbeb;
+            border-color: #fbbf24 !important;
+        }
+
+        .btn-tambah {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn-hapus {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #ccc;
+        }
+
+        .total-hpp {
+            font-size: 20px;
+            font-weight: 600;
+            color: #D35400;
+        }
+
+        .btn-simpan {
+            background-color: #FF7F50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h2>UPDATE STATUS DAN HPP</h2>
+    </div>
+
+    <div class="info-tamu">
+        <h3 id="teksNamaTamu">Memuat Data Tamu... ⏳</h3>
+        <p style="margin: 5px 0;"><strong>Status Pembayaran:</strong>
+            <select id="statusBayar" style="width: auto; display: inline-block;">
+                <option value="DP 1">DP 1</option>
+                <option value="DP 2">DP 2</option>
+                <option value="DP 3">DP 3</option>
+                <option value="Lunas">Lunas</option>
+            </select>
+        </p>
+    </div>
+
+    <h4>RINCIAN HPP (PENGELUARAN TRIP)</h4>
+    <table id="tabelHPP">
+        <thead>
+            <tr>
+                <th width="5%">No</th>
+                <th width="20%">Kategori</th>
+                <th width="25%">Vendor / Item</th>
+                <th width="20%">Nominal (Rp)</th>
+                <th width="25%">Catatan Tambahan</th>
+                <th width="5%">Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="bodyHPP"></tbody>
+    </table>
+
+    <button class="btn-tambah" onclick="tambahBaris()">➕ Tambah Item Pengeluaran</button>
+
+    <div class="footer">
+        <div class="total-hpp">TOTAL HPP: Rp <span id="labelTotal">0</span></div>
+        <button class="btn-simpan" onclick="simpanData()" id="btnSimpan">💾 SIMPAN DATA</button>
+    </div>
+
+    <script>
+        var globalData = {};
+        var masterKategori = {};
+
+        window.onload = function () {
+            google.script.run.withSuccessHandler(function (master) {
+                masterKategori = master;
+                google.script.run.withSuccessHandler(populateForm).getBarisAktif();
+            }).getMasterKategoriHPP();
+        }
+
+        function populateForm(data) {
+            if (data.error) {
+                document.getElementById('teksNamaTamu').innerText = "⚠️ " + data.error;
+                document.getElementById('btnSimpan').disabled = true;
+                return;
+            }
+            globalData = data;
+            document.getElementById('teksNamaTamu').innerText = data.kode + " | " + data.nama;
+            document.getElementById('statusBayar').value = data.status || 'Belum DP';
+            document.getElementById('bodyHPP').innerHTML = '';
+
+            if (data.rincian.length === 0) { tambahBaris(); }
+            else {
+                data.rincian.forEach(function (item) {
+                    tambahBaris(item.kategori, item.vendor, item.catatan, item.nominal);
+                });
+            }
+        }
+
+        function formatRupiah(input) {
+            let angka = input.value.replace(/[^,\d]/g, '').toString();
+            let sisa = angka.length % 3;
+            let rupiah = angka.substr(0, sisa);
+            let ribuan = angka.substr(sisa).match(/\d{3}/gi);
+            if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
+            input.value = rupiah; hitungTotal();
+        }
+
+        function hitungTotal() {
+            let inputs = document.querySelectorAll('.input-nominal'); let total = 0;
+            inputs.forEach(function (input) { let nilaiAngka = parseInt(input.value.replace(/\./g, '')) || 0; total += nilaiAngka; });
+            document.getElementById('labelTotal').innerText = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function tambahBaris(kategoriVal = '', vendorVal = '', catatanVal = '', nominalVal = '') {
+            let tbody = document.getElementById('bodyHPP');
+            let tr = document.createElement('tr');
+            let formatNominal = nominalVal ? nominalVal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : '';
+
+            let katOptions = '<option value="">--Pilih--</option>';
+            for (let kat in masterKategori) {
+                let selected = (kat === kategoriVal) ? 'selected' : '';
+                katOptions += `<option value="${kat}" ${selected}>${kat}</option>`;
+            }
+
+            // Perhatikan kolom Vendor sekarang punya input text tersembunyi
+            tr.innerHTML = `
+        <td class="text-center nomor-urut"></td>
+        <td><select class="input-kategori" onchange="updateVendor(this)">${katOptions}</select></td>
+        <td>
+          <select class="input-vendor" onchange="cekManual(this)"><option value="">--Pilih Vendor--</option></select>
+          <input type="text" class="input-vendor-manual" placeholder="Ketik nama vendor baru...">
+        </td>
+        <td><input type="text" class="input-nominal" placeholder="1.500.000" onkeyup="formatRupiah(this)" value="${formatNominal}"></td>
+        <td><input type="text" class="input-catatan" placeholder="Cth: BBM / Rinci..." value="${catatanVal}"></td>
+        <td class="text-center"><button class="btn-hapus" onclick="hapusBaris(this)">🗑️</button></td>
+      `;
+            tbody.appendChild(tr);
+
+            let katSelect = tr.querySelector('.input-kategori');
+            updateVendor(katSelect, vendorVal);
+
+            updateNomorUrut(); hitungTotal();
+        }
+
+        function updateVendor(katSelect, selectedVendor = '') {
+            let kat = katSelect.value;
+            let tr = katSelect.closest('tr');
+            let venSelect = tr.querySelector('.input-vendor');
+            let venManual = tr.querySelector('.input-vendor-manual');
+
+            venSelect.innerHTML = '<option value="">--Pilih Vendor--</option>';
+            venManual.style.display = 'none'; // Sembunyikan input manual tiap kali ganti kategori
+            venManual.value = '';
+
+            if (kat && masterKategori[kat]) {
+                let vendors = masterKategori[kat];
+                vendors.forEach(v => {
+                    let sel = (v === selectedVendor) ? 'selected' : '';
+                    venSelect.innerHTML += `<option value="${v}" ${sel}>${v}</option>`;
+                });
+
+                // Data lama yang nggak ada di master
+                if (selectedVendor && !vendors.includes(selectedVendor)) {
+                    venSelect.innerHTML += `<option value="${selectedVendor}" selected>${selectedVendor}</option>`;
+                }
+            } else if (selectedVendor) {
+                venSelect.innerHTML += `<option value="${selectedVendor}" selected>${selectedVendor}</option>`;
+            }
+
+            // Tambahkan opsi KETIK MANUAL di paling bawah
+            if (kat) {
+                venSelect.innerHTML += `<option value="TAMBAH_BARU" style="font-weight:bold; color:#D35400;">+ Ketik Manual...</option>`;
+            }
+        }
+
+        // Fungsi memunculkan input text jika pilih "+ Ketik Manual..."
+        function cekManual(venSelect) {
+            let venManual = venSelect.nextElementSibling;
+            if (venSelect.value === "TAMBAH_BARU") {
+                venManual.style.display = 'block';
+                venManual.focus();
+            } else {
+                venManual.style.display = 'none';
+                venManual.value = '';
+            }
+        }
+
+        function hapusBaris(btn) {
+            let tr = btn.parentNode.parentNode; tr.parentNode.removeChild(tr); updateNomorUrut(); hitungTotal();
+        }
+
+        function updateNomorUrut() {
+            let baris = document.querySelectorAll('.nomor-urut');
+            baris.forEach((kolom, index) => { kolom.innerText = index + 1; });
+        }
+
+        function simpanData() {
+            let btn = document.getElementById('btnSimpan');
+            btn.innerText = "⏳ MENYIMPAN..."; btn.disabled = true;
+            let statusBaru = document.getElementById('statusBayar').value;
+            let rincianBaru = [];
+            let trs = document.querySelectorAll('#bodyHPP tr');
+
+            trs.forEach(function (tr) {
+                let kat = tr.querySelector('.input-kategori').value;
+                let ven = tr.querySelector('.input-vendor').value;
+                let cat = tr.querySelector('.input-catatan').value;
+                let nom = tr.querySelector('.input-nominal').value.replace(/\./g, '');
+
+                // Ambil teks dari input manual kalau user pilih TAMBAH_BARU
+                if (ven === "TAMBAH_BARU") {
+                    ven = tr.querySelector('.input-vendor-manual').value;
+                }
+
+                if (nom !== "" && nom !== "0") {
+                    rincianBaru.push({ kategori: kat, vendor: ven, catatan: cat, nominal: nom });
+                }
+            });
+
+            let payload = { baris: globalData.baris, kode: globalData.kode, nama: globalData.nama, status: statusBaru, rincian: rincianBaru };
+            google.script.run.withSuccessHandler(function () { google.script.host.close(); }).simpanDataKeSheet(payload);
+        }
+    </script>
+</body>
+
+</html>
