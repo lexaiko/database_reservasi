@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { formatRupiah, formatRibuan } from '@/lib/formatters';
-import { BarChart3, Award, Users2, Compass, TrendingUp, Sparkles } from 'lucide-react';
+import { BarChart3, Award, Users2, Compass, TrendingUp } from 'lucide-react';
 import DonutSumberTamu from '@/components/DonutSumberTamu';
 
 interface SalesChartsProps {

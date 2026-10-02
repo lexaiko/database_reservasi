@@ -101,7 +101,7 @@ export default function KpiMetrics({
             <div>
               <div
                 title={formatRupiah(kpi.totalRevenue)}
-                className="font-heading font-black text-lg sm:text-xl lg:text-2xl xl:text-3xl tracking-tight bg-gradient-to-r from-orange-600 to-amber-500 dark:from-orange-400 dark:to-amber-400 bg-clip-text text-transparent truncate tabular-nums"
+                className="font-heading font-black text-lg sm:text-xl lg:text-2xl xl:text-3xl tracking-tight text-foreground truncate tabular-nums"
               >
                 {formatRupiah(kpi.totalRevenue)}
               </div>

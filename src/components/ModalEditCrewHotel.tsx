@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Reservasi } from '@/lib/types';
-import { X, Building2, Users, MapPin, FileText, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
+import { X, Building2, Users, MapPin, FileText, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface ModalEditCrewHotelProps {
   reservasi: Reservasi | null;
@@ -23,6 +23,16 @@ export default function ModalEditCrewHotel({
   const [catatan, setCatatan] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (reservasi) {

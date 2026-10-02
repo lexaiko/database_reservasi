@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { formatRupiah } from '@/lib/formatters';
-import { PieChart, TrendingUp, Sparkles, Filter } from 'lucide-react';
+import { PieChart } from 'lucide-react';
 
 interface DonutSumberTamuProps {
   data?: { name: string; count: number; revenue: number }[];

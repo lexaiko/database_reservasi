@@ -21,7 +21,6 @@ import {
   Receipt,
   UserCheck,
   Building2,
-  Sparkles,
 } from 'lucide-react';
 import { HppView } from './HppView';
 
@@ -353,18 +352,13 @@ export default function HppManagerView({
       <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left: Title & Context */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 flex items-center justify-center shrink-0">
             <Receipt size={20} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-black font-heading text-foreground tracking-tight">
-                Pusat Status &amp; HPP Tamu
-              </h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
-                ERP CORE
-              </span>
-            </div>
+            <h1 className="text-base sm:text-lg font-black font-heading text-foreground tracking-tight">
+              Pusat Status &amp; HPP Tamu
+            </h1>
             <p className="text-xs text-muted-foreground font-medium">
               {activeMode === 'update'
                 ? 'Formulir pembaruan status pembayaran dan rincian pengeluaran vendor per tamu'
@@ -382,7 +376,7 @@ export default function HppManagerView({
             onClick={() => handleSwitchMode('update')}
             className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeMode === 'update'
-                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-sm shadow-orange-950/20 font-extrabold'
+                ? 'bg-primary text-primary-foreground shadow-xs font-extrabold'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
@@ -395,7 +389,7 @@ export default function HppManagerView({
             onClick={() => handleSwitchMode('detail')}
             className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeMode === 'detail'
-                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-sm shadow-orange-950/20 font-extrabold'
+                ? 'bg-primary text-primary-foreground shadow-xs font-extrabold'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
@@ -408,7 +402,7 @@ export default function HppManagerView({
             onClick={() => handleSwitchMode('katalog')}
             className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeMode === 'katalog'
-                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-sm shadow-orange-950/20 font-extrabold'
+                ? 'bg-primary text-primary-foreground shadow-xs font-extrabold'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
             }`}
           >
@@ -475,7 +469,7 @@ export default function HppManagerView({
               </div>
               <button
                 type="submit"
-                className="h-11 px-6 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 active:scale-95 text-white font-extrabold text-xs tracking-wider uppercase shadow-sm shadow-orange-950/20 transition-all cursor-pointer shrink-0"
+                className="h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-xs tracking-wider uppercase transition-all cursor-pointer shrink-0"
               >
                 Cari
               </button>
@@ -855,7 +849,7 @@ export default function HppManagerView({
                 type="button"
                 onClick={handleSaveHpp}
                 disabled={isSaving || isLoadingHpp || !selectedReservasi}
-                className="py-3.5 px-6 rounded-xl text-white font-extrabold text-xs sm:text-sm bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 shadow-md shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer flex-1 sm:flex-initial"
+                className="py-3.5 px-6 rounded-xl text-white font-extrabold text-xs sm:text-sm bg-orange-600 hover:bg-orange-700 shadow-md shadow-orange-600/20 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer flex-1 sm:flex-initial"
               >
                 {isSaving ? (
                   <>

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Reservasi } from '@/lib/types';
 import { formatRupiah, formatDateDisplay } from '@/lib/formatters';
 import {
@@ -31,6 +31,16 @@ export default function ModalDetail({
   onOpenDetailHpp,
   onOpenEdit,
 }: ModalDetailProps) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !reservasi) return null;
 
   const cleanWa = (reservasi.whatsapp || '').replace(/[^0-9]/g, '');

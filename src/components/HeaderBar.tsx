@@ -58,13 +58,10 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           </button>
 
           <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-heading font-black text-lg sm:text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500 dark:from-orange-400 dark:to-amber-400 truncate">
+            <div className="flex items-center gap-2">
+              <h1 className="font-heading font-black text-lg sm:text-2xl tracking-tight text-foreground truncate">
                 {currentTabInfo.title}
               </h1>
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
-                {currentTabInfo.tag}
-              </span>
             </div>
             <p className="text-xs text-muted-foreground font-semibold truncate hidden sm:block">
               {currentTabInfo.subtitle}

@@ -137,19 +137,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               isCollapsed ? 'flex-col py-2' : ''
             }`}
           >
-            <div className="flex items-center gap-2.5 min-w-0 text-left cursor-pointer flex-1">
-              <div className="h-8 w-8 rounded-full bg-primary/10 text-primary font-black text-xs uppercase flex items-center justify-center shrink-0 border border-primary/20 relative">
+            <div className="flex items-center gap-2.5 min-w-0 text-left flex-1">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary font-black text-xs uppercase flex items-center justify-center shrink-0 border border-primary/20">
                 TB
-                <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-500" />
               </div>
               {!isCollapsed && (
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[11px] font-black text-foreground leading-tight truncate">
                     Admin Workspace
                   </span>
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider mt-0.5 text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <Shield size={10} />
-                    Super Admin
+                  <span className="text-[10px] font-bold text-muted-foreground mt-0.5 truncate">
+                    TripBanyuwangi ERP
                   </span>
                 </div>
               )}
