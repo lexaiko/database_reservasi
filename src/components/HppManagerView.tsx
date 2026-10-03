@@ -24,6 +24,7 @@ import {
   User,
   Hash,
   ArrowLeft,
+  Lock,
 } from 'lucide-react';
 import { HppView } from './HppView';
 
@@ -43,6 +44,8 @@ interface HppManagerViewProps {
   onModeChange?: (mode: 'update' | 'detail' | 'katalog') => void;
   onRefreshData?: () => void;
   onSuccess?: (msg: string) => void;
+  assignedPic?: string;
+  isIntern?: boolean;
 }
 
 export default function HppManagerView({
@@ -52,6 +55,8 @@ export default function HppManagerView({
   onModeChange,
   onRefreshData,
   onSuccess,
+  assignedPic,
+  isIntern = false,
 }: HppManagerViewProps) {
   // Mode state: 'update' (UPDATE STATUS DAN HPP), 'detail' (Detail HPP Laporan), 'katalog' (Semua HPP)
   const [activeMode, setActiveMode] = useState<'update' | 'detail' | 'katalog'>(initialMode);
@@ -63,42 +68,17 @@ export default function HppManagerView({
   const [activeKode, setActiveKode] = useState<string>(initialKode || '');
   const [searchInput, setSearchInput] = useState<string>('');
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  const [allReservationsList, setAllReservationsList] = useState<Reservasi[]>(reservations);
-  const [isLoadingAllReservations, setIsLoadingAllReservations] = useState<boolean>(false);
+  // Scoped reservations according to assignedPic (if admin/intern)
+  const scopedReservationsList = useMemo(() => {
+    if (!assignedPic) return reservations;
+    return reservations.filter((r) => (r.picAgen || '').toLowerCase() === assignedPic.toLowerCase());
+  }, [reservations, assignedPic]);
 
-  // Load all reservations from API for full catalog & global autocomplete
-  const loadAllReservations = async () => {
-    try {
-      setIsLoadingAllReservations(true);
-      const res = await fetch('/api/reservasi?limit=1000');
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setAllReservationsList(json.data);
-      }
-    } catch (err) {
-      console.error('Failed to load all reservations:', err);
-    } finally {
-      setIsLoadingAllReservations(false);
-    }
-  };
-
-  useEffect(() => {
-    loadAllReservations();
-  }, []);
-
-  // Sync if reservations prop changes
-  useEffect(() => {
-    if (reservations.length > allReservationsList.length) {
-      setAllReservationsList(reservations);
-    }
-  }, [reservations]);
-
-  // Selected reservation from all reservations list
+  // Selected reservation from scoped reservations list
   const selectedReservasi = useMemo(() => {
     if (!activeKode) return null;
-    const list = allReservationsList.length > 0 ? allReservationsList : reservations;
-    return list.find((r) => r.kode.toLowerCase() === activeKode.toLowerCase()) || null;
-  }, [activeKode, allReservationsList, reservations]);
+    return scopedReservationsList.find((r) => r.kode.toLowerCase() === activeKode.toLowerCase()) || null;
+  }, [activeKode, scopedReservationsList]);
 
   // HPP Editor States
   const [isLoadingHpp, setIsLoadingHpp] = useState(false);
@@ -212,10 +192,9 @@ export default function HppManagerView({
 
   // Autocomplete filtering
   const suggestions = useMemo(() => {
-    const list = allReservationsList.length > 0 ? allReservationsList : reservations;
-    if (!searchInput.trim()) return list.slice(0, 10);
+    if (!searchInput.trim()) return scopedReservationsList.slice(0, 10);
     const q = searchInput.toLowerCase();
-    return list
+    return scopedReservationsList
       .filter(
         (r) =>
           r.namaTamu.toLowerCase().includes(q) ||
@@ -224,7 +203,7 @@ export default function HppManagerView({
           r.picAgen.toLowerCase().includes(q)
       )
       .slice(0, 10);
-  }, [allReservationsList, reservations, searchInput]);
+  }, [scopedReservationsList, searchInput]);
 
   const handleSelectGuest = (r: Reservasi) => {
     setActiveKode(r.kode);
@@ -239,8 +218,7 @@ export default function HppManagerView({
 
     const match = searchInput.match(/\[([A-Za-z0-9-]+)\]/);
     const target = match ? match[1] : searchInput.trim();
-    const list = allReservationsList.length > 0 ? allReservationsList : reservations;
-    const found = list.find(
+    const found = scopedReservationsList.find(
       (r) => r.kode.toLowerCase() === target.toLowerCase() || r.namaTamu.toLowerCase().includes(target.toLowerCase())
     );
     if (found) {
@@ -341,7 +319,6 @@ export default function HppManagerView({
       setSuccessMessage(msg);
       if (onSuccess) onSuccess(msg);
       if (onRefreshData) onRefreshData();
-      loadAllReservations();
     } catch (err: any) {
       setErrorMessage(err.message || 'Terjadi kesalahan sistem saat menyimpan.');
     } finally {
@@ -399,14 +376,13 @@ export default function HppManagerView({
                   type="button"
                   onClick={() => {
                     if (onRefreshData) onRefreshData();
-                    loadAllReservations();
                     if (activeKode) loadHppData(activeKode);
                   }}
-                  disabled={isLoadingHpp || isLoadingAllReservations}
+                  disabled={isLoadingHpp}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-muted/40 hover:bg-muted text-foreground text-xs font-bold transition-all cursor-pointer"
                   title="Segarkan Data dari Sheet"
                 >
-                  <RefreshCw size={13} className={isLoadingHpp || isLoadingAllReservations ? 'animate-spin text-primary' : ''} />
+                  <RefreshCw size={13} className={isLoadingHpp ? 'animate-spin text-primary' : ''} />
                   <span>Refresh</span>
                 </button>
               )}
@@ -530,22 +506,13 @@ export default function HppManagerView({
             </div>
 
             {/* Right: Financial Quick Cards */}
-            <div className="lg:col-span-5 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="lg:col-span-5 grid grid-cols-2 gap-2 text-center text-xs">
               <div className="p-2.5 rounded-xl bg-muted/40 border border-border">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-0.5">
                   Nilai Order
                 </span>
                 <span className="font-extrabold text-foreground block text-xs sm:text-sm">
                   {formatRupiah(selectedReservasi.nilaiOrder)}
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-0.5">
-                  DP Masuk
-                </span>
-                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 block text-xs sm:text-sm">
-                  {formatRupiah(selectedReservasi.dp)}
                 </span>
               </div>
 
@@ -805,9 +772,16 @@ export default function HppManagerView({
               <div className="text-2xl font-black text-orange-600 dark:text-orange-400 tabular-nums">
                 {formatRupiah(totalHpp)}
               </div>
-              <div className="text-xs text-muted-foreground font-semibold">
-                Estimasi Profit: <strong className="text-emerald-700 dark:text-emerald-400">{formatRupiah(profit)}</strong> (Margin: {margin}%)
-              </div>
+              {isIntern ? (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-[11px] font-bold text-muted-foreground border border-border">
+                  <Lock className="w-3 h-3 text-muted-foreground" />
+                  <span>Estimasi Profit &amp; Margin: Terkunci (Akses PIC &amp; Superadmin)</span>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground font-semibold">
+                  Estimasi Profit: <strong className="text-emerald-700 dark:text-emerald-400">{formatRupiah(profit)}</strong> (Margin: {margin}%)
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col-reverse sm:flex-row items-center gap-2.5 w-full sm:w-auto">
@@ -1037,20 +1011,32 @@ export default function HppManagerView({
               </div>
 
               <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase block mb-0.5">
-                  Gross Profit (AF)
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase block mb-0.5 flex items-center gap-1">
+                  {isIntern && <Lock className="w-3 h-3" />}
+                  <span>Gross Profit (AF)</span>
                 </span>
                 <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 tabular-nums block truncate">
-                  {formatRupiah(profit)}
+                  {isIntern ? (
+                    <span className="text-xs text-muted-foreground font-semibold">Terkunci</span>
+                  ) : (
+                    formatRupiah(profit)
+                  )}
                 </span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-0.5">
-                  Gross Margin (%) (AG)
+                <span className="text-[10px] font-bold text-muted-foreground uppercase block mb-0.5 flex items-center gap-1">
+                  {isIntern && <Lock className="w-3 h-3" />}
+                  <span>Gross Margin (%) (AG)</span>
                 </span>
                 <span className="text-sm sm:text-base font-black text-foreground tabular-nums block truncate">
-                  {totalHpp > 0 ? `${margin}%` : '0%'}
+                  {isIntern ? (
+                    <span className="text-xs text-muted-foreground font-semibold">Terkunci</span>
+                  ) : totalHpp > 0 ? (
+                    `${margin}%`
+                  ) : (
+                    '0%'
+                  )}
                 </span>
               </div>
             </div>
@@ -1062,8 +1048,9 @@ export default function HppManagerView({
       {activeMode === 'katalog' && (
         <div className="space-y-5 animate-fade-in">
           <HppView
-            reservations={allReservationsList.length > 0 ? allReservationsList : reservations}
-            isLoading={isLoadingAllReservations}
+            reservations={scopedReservationsList}
+            isLoading={reservations.length === 0}
+            isIntern={isIntern}
             onOpenHppModal={(r) => {
               setActiveKode(r.kode);
               handleSwitchMode('update');

@@ -62,19 +62,27 @@ export async function GET(req: NextRequest) {
     // Sort: Data paling baru (ID/baris tertinggi) di paling atas
     list.sort((a, b) => b.rowNumber - a.rowNumber);
 
-    // Pagination
+    // Pagination / All Mode
+    const getAll = searchParams.get('all') === 'true';
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const total = list.length;
-    const startIndex = (page - 1) * limit;
-    const paginatedItems = list.slice(startIndex, startIndex + limit);
+
+    let paginatedItems = list;
+    let totalPages = 1;
+
+    if (!getAll && limit > 0) {
+      const startIndex = (page - 1) * limit;
+      paginatedItems = list.slice(startIndex, startIndex + limit);
+      totalPages = Math.ceil(total / limit);
+    }
 
     return NextResponse.json({
       success: true,
       total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      page: getAll ? 1 : page,
+      limit: getAll ? total : limit,
+      totalPages,
       data: paginatedItems,
     });
   } catch (error: any) {

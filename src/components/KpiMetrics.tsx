@@ -5,22 +5,24 @@ import { DashboardKpi } from '@/lib/types';
 import { formatRupiah, formatRibuan } from '@/lib/formatters';
 import {
   Users,
-  Backpack,
-  Gem,
+  DollarSign,
   TrendingUp,
   PieChart,
+  Lock,
 } from 'lucide-react';
 
 interface KpiMetricsProps {
   kpi: DashboardKpi;
   selectedMonthName?: string;
   selectedYear?: string;
+  isIntern?: boolean;
 }
 
 export default function KpiMetrics({
   kpi,
   selectedMonthName,
   selectedYear = '2026',
+  isIntern = false,
 }: KpiMetricsProps) {
   return (
     <div className="space-y-4">
@@ -29,7 +31,7 @@ export default function KpiMetrics({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-foreground uppercase tracking-wider">
-              Performa Penjualan &amp; Laba Kotor
+              Performa Penjualan &amp; Operasional
             </span>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/70">
               {selectedMonthName ? `${selectedMonthName} ${selectedYear}` : `Semua Bulan ${selectedYear}`}
@@ -68,8 +70,8 @@ export default function KpiMetrics({
               <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
                 Total Tamu
               </span>
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                <Backpack className="w-4 h-4" />
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4" />
               </div>
             </div>
             <div>
@@ -92,13 +94,13 @@ export default function KpiMetrics({
                 Omset Penjualan
               </span>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
-                <Gem className="w-4 h-4" />
+                <DollarSign className="w-4 h-4" />
               </div>
             </div>
             <div>
               <div
                 title={formatRupiah(kpi.totalRevenue)}
-                className="font-heading font-black text-lg sm:text-xl lg:text-2xl xl:text-3xl tracking-tight text-foreground truncate tabular-nums"
+                className="font-heading font-black text-[11px] min-[480px]:text-sm sm:text-xl lg:text-2xl xl:text-3xl tracking-tight text-foreground tabular-nums leading-snug"
               >
                 {formatRupiah(kpi.totalRevenue)}
               </div>
@@ -115,19 +117,32 @@ export default function KpiMetrics({
                 Gross Profit
               </span>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <TrendingUp className="w-4 h-4" />
+                {isIntern ? <Lock className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
               </div>
             </div>
             <div>
-              <div
-                title={formatRupiah(kpi.grossProfit)}
-                className="font-heading font-black text-lg sm:text-xl lg:text-2xl xl:text-3xl text-emerald-600 dark:text-emerald-400 tracking-tight truncate tabular-nums"
-              >
-                {formatRupiah(kpi.grossProfit)}
-              </div>
-              <span className="text-[10px] sm:text-[11px] lg:text-xs text-muted-foreground font-medium mt-0.5 block truncate">
-                Beban HPP: {formatRupiah(kpi.totalHpp)}
-              </span>
+              {isIntern ? (
+                <div>
+                  <div className="font-heading font-black text-sm sm:text-base text-muted-foreground tracking-tight">
+                    Terkunci
+                  </div>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground/80 font-medium mt-0.5 block truncate">
+                    Akses khusus PIC &amp; Superadmin
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  <div
+                    title={formatRupiah(kpi.grossProfit)}
+                    className="font-heading font-black text-[11px] min-[480px]:text-sm sm:text-xl lg:text-2xl xl:text-3xl text-emerald-600 dark:text-emerald-400 tracking-tight tabular-nums leading-snug"
+                  >
+                    {formatRupiah(kpi.grossProfit)}
+                  </div>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground font-medium mt-0.5 block truncate">
+                    Beban HPP: {formatRupiah(kpi.totalHpp)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -135,30 +150,43 @@ export default function KpiMetrics({
           <div className="col-span-2 md:col-span-1 p-3 sm:p-4 lg:p-5 rounded-2xl bg-card border border-border/80 shadow-xs relative overflow-hidden transition-all hover:border-primary/40 flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider truncate">
-                Gross Margin Operasional
+                Gross Margin
               </span>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0">
-                <PieChart className="w-4 h-4" />
+                {isIntern ? <Lock className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
               </div>
             </div>
             <div>
-              <div className="flex items-baseline justify-between gap-2">
-                <div className="font-mono text-xl sm:text-2xl lg:text-3xl font-black text-foreground tracking-tight tabular-nums">
-                  {kpi.grossMargin.toFixed(1)}%
+              {isIntern ? (
+                <div>
+                  <div className="font-heading font-black text-sm sm:text-base text-muted-foreground tracking-tight">
+                    Terkunci
+                  </div>
+                  <span className="text-[10px] sm:text-xs text-muted-foreground/80 font-medium mt-0.5 block truncate">
+                    Akses khusus PIC &amp; Superadmin
+                  </span>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  {kpi.grossMargin >= 25 ? 'Profitabel' : 'Margin Tipis'}
-                </span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2 mt-2 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-orange-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, Math.max(0, kpi.grossMargin))}%` }}
-                />
-              </div>
-              <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-1.5 block">
-                Rasio laba kotor terhadap omset terverifikasi
-              </span>
+              ) : (
+                <div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="font-mono text-xl sm:text-2xl lg:text-3xl font-black text-foreground tracking-tight tabular-nums">
+                      {kpi.grossMargin.toFixed(1)}%
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      {kpi.grossMargin >= 25 ? 'Profitabel' : 'Margin Tipis'}
+                    </span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2 mt-2 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-orange-500 to-emerald-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(0, kpi.grossMargin))}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium mt-1.5 block">
+                    Rasio laba kotor terhadap omset
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

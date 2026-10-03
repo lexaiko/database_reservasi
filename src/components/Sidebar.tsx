@@ -5,10 +5,9 @@ import {
   Compass,
   LayoutDashboard,
   Database,
-  HandCoins,
-  BookOpen,
   Receipt,
   CalendarDays,
+  Camera,
   Sun,
   Moon,
   Menu,
@@ -16,9 +15,12 @@ import {
   ChevronRight,
   Shield,
   FileSpreadsheet,
+  LogOut,
+  Sliders,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
-export type NavTab = 'dashboard' | 'reservasi' | 'hpp' | 'operasional';
+export type NavTab = 'dashboard' | 'reservasi' | 'hpp' | 'operasional' | 'leads-review' | 'settings';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -38,6 +40,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   onToggleCollapse,
 }) => {
+  const { profile, logout } = useAuth();
+  const isSuperadmin = profile?.role === 'superadmin';
+
   const menuItems = [
     {
       id: 'dashboard' as NavTab,
@@ -52,9 +57,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Database,
     },
     {
+      id: 'leads-review' as NavTab,
+      label: 'Input Source & Review',
+      shortLabel: 'Source & Review',
+      icon: Camera,
+    },
+    {
       id: 'hpp' as NavTab,
-      label: 'HPP & Status Tamu',
-      shortLabel: 'HPP',
+      label: 'Update HPP',
+      shortLabel: 'Update HPP',
       icon: Receipt,
     },
     {
@@ -63,7 +74,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
       shortLabel: 'Jadwal',
       icon: CalendarDays,
     },
+    ...(isSuperadmin
+      ? [
+          {
+            id: 'settings' as NavTab,
+            label: 'Pengaturan & Admin',
+            shortLabel: 'Pengaturan',
+            icon: Sliders,
+          },
+        ]
+      : []),
   ];
+  const userName = profile?.name || 'Admin Workspace';
+  const roleType = profile?.role || 'admin';
+  const assignedPic = profile?.assignedPic || '';
+  const userRoleBadge =
+    roleType === 'superadmin'
+      ? 'SUPERADMIN'
+      : roleType === 'intern'
+      ? `INTERN • ${assignedPic || 'MAGANG'}`
+      : `PIC • ${assignedPic || 'ADMIN'}`;
+  const userInitials = profile?.name
+    ? profile.name
+        .split(' ')
+        .filter(Boolean)
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'TB';
 
   return (
     <aside
@@ -72,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }`}
     >
       <div>
-        {/* Brand Header Logo - Matched 1:1 with TripBwi CRM */}
+        {/* Brand Header Logo */}
         <div className="flex items-center justify-between px-2 mb-6">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white font-bold shadow-md shadow-orange-500/20 shrink-0">
@@ -81,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed && (
               <div className="flex flex-col text-left min-w-0">
                 <span className="font-heading font-extrabold text-lg leading-none tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500 dark:from-orange-400 dark:to-amber-400">
-                  TripBwi CRM
+                  Reservasi TripBwi
                 </span>
                 <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest mt-1 font-sans">
                   Reservasi Core
@@ -117,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                 )}
                 {isActive && !isCollapsed && (
-                  <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                  <div className="absolute right-3 h-1.5 w-1.5 rounded-full bg-primary-foreground/60" />
                 )}
                 {isActive && isCollapsed && (
                   <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-primary ring-2 ring-card" />
@@ -138,20 +177,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }`}
           >
             <div className="flex items-center gap-2.5 min-w-0 text-left flex-1">
-              <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary font-black text-xs uppercase flex items-center justify-center shrink-0 border border-primary/20">
-                TB
+              <div
+                className={`h-8 w-8 rounded-xl font-black text-xs uppercase flex items-center justify-center shrink-0 border ${
+                  roleType === 'superadmin'
+                    ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20'
+                    : roleType === 'intern'
+                    ? 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20'
+                    : 'bg-primary/10 text-primary border-primary/20'
+                }`}
+              >
+                {userInitials}
               </div>
               {!isCollapsed && (
-                <div className="flex flex-col text-left min-w-0">
+                <div className="flex flex-col text-left min-w-0 flex-1">
                   <span className="text-[11px] font-black text-foreground leading-tight truncate">
-                    Admin Workspace
+                    {userName}
                   </span>
-                  <span className="text-[10px] font-bold text-muted-foreground mt-0.5 truncate">
-                    TripBanyuwangi ERP
-                  </span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className={`text-[8.5px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded truncate max-w-[140px] ${
+                        roleType === 'superadmin'
+                          ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300'
+                          : roleType === 'intern'
+                          ? 'bg-sky-500/10 text-sky-700 dark:text-sky-300'
+                          : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                      }`}
+                      title={userRoleBadge}
+                    >
+                      {userRoleBadge}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
+
+            {/* Logout button */}
+            <button
+              type="button"
+              onClick={() => logout()}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+              title="Keluar dari akun"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
 

@@ -12,6 +12,8 @@ import {
   Star,
   ExternalLink,
   FileText,
+  Trash2,
+  Lock,
 } from 'lucide-react';
 
 interface ModalDetailProps {
@@ -21,6 +23,8 @@ interface ModalDetailProps {
   onOpenHpp: (r: Reservasi) => void;
   onOpenDetailHpp?: (r: Reservasi) => void;
   onOpenEdit: (r: Reservasi) => void;
+  onDelete?: (r: Reservasi) => void;
+  isIntern?: boolean;
 }
 
 export default function ModalDetail({
@@ -30,6 +34,8 @@ export default function ModalDetail({
   onOpenHpp,
   onOpenDetailHpp,
   onOpenEdit,
+  onDelete,
+  isIntern = false,
 }: ModalDetailProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -269,7 +275,7 @@ export default function ModalDetail({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
                 <span className="text-slate-400 dark:text-slate-500 block font-semibold mb-0.5">Nilai Order (X)</span>
                 <span className="text-slate-900 dark:text-slate-100 font-black text-sm">{formatRupiah(reservasi.nilaiOrder)}</span>
@@ -282,28 +288,41 @@ export default function ModalDetail({
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 dark:text-slate-500 block font-semibold mb-0.5">Sisa Pelunasan (AA)</span>
-                <span className={`font-extrabold ${reservasi.sisaPelunasan > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                  {formatRupiah(reservasi.sisaPelunasan)}
+                <span className="text-slate-400 dark:text-slate-500 block font-semibold mb-0.5">Total HPP (AE)</span>
+                <span className="text-slate-900 dark:text-slate-100 font-extrabold">{formatRupiah(reservasi.hpp)}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800/40">
+                <span className="text-emerald-700 dark:text-emerald-400 block font-semibold mb-0.5 flex items-center gap-1">
+                  {isIntern && <Lock className="w-3 h-3" />}
+                  <span>Gross Profit (AF)</span>
+                </span>
+                <span className="text-emerald-800 dark:text-emerald-300 font-black text-base">
+                  {isIntern ? (
+                    <span className="text-xs text-muted-foreground font-semibold">Terkunci (Hak PIC)</span>
+                  ) : reservasi.hpp > 0 ? (
+                    formatRupiah(reservasi.profit)
+                  ) : (
+                    '-'
+                  )}
                 </span>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
-                <span className="text-slate-400 dark:text-slate-500 block font-semibold mb-0.5">Total HPP (AE)</span>
-                <span className="text-slate-900 dark:text-slate-100 font-extrabold">{formatRupiah(reservasi.hpp)}</span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800/40 sm:col-span-2">
-                <span className="text-emerald-700 dark:text-emerald-400 block font-semibold mb-0.5">Gross Profit (AF)</span>
-                <span className="text-emerald-800 dark:text-emerald-300 font-black text-base">
-                  {reservasi.hpp > 0 ? formatRupiah(reservasi.profit) : '-'}
+                <span className="text-slate-400 dark:text-slate-500 block font-semibold mb-0.5 flex items-center gap-1">
+                  {isIntern && <Lock className="w-3 h-3" />}
+                  <span>Gross Margin (AG)</span>
                 </span>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 sm:col-span-2">
-                <span className="text-slate-400 dark:text-slate-500 block font-semibold mb-0.5">Gross Margin (AG)</span>
                 <span className="text-slate-900 dark:text-slate-100 font-black text-base">
-                  {reservasi.hpp > 0 ? `${reservasi.margin}%` : '0%'}
+                  {isIntern ? (
+                    <span className="text-xs text-muted-foreground font-semibold">Terkunci</span>
+                  ) : reservasi.hpp > 0 ? (
+                    `${reservasi.margin}%`
+                  ) : (
+                    '0%'
+                  )}
                 </span>
               </div>
             </div>
@@ -358,23 +377,41 @@ export default function ModalDetail({
         </div>
 
         {/* Sticky Bottom Actions Bar (Comfortable Mobile UX) */}
-        <div className="bg-white dark:bg-slate-900 px-3.5 py-3 sm:px-6 sm:py-3.5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-between sticky bottom-0 z-20">
-          <button
-            type="button"
-            onClick={onClose}
-            className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-700 dark:text-slate-300 transition-all cursor-pointer h-10 text-center flex items-center justify-center"
-          >
-            Tutup
-          </button>
+        <div className="bg-white dark:bg-slate-900 px-3.5 py-3 sm:px-6 sm:py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between sticky bottom-0 z-20 gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-bold text-slate-700 dark:text-slate-300 transition-all cursor-pointer h-10 text-center flex items-center justify-center"
+            >
+              Tutup
+            </button>
 
-          <div className="col-span-2 flex items-center gap-2 sm:flex-initial justify-end">
+            {/* Tombol Hapus (HANYA MUNCUL UNTUK SUPERADMIN / ADMIN, DILARANG UNTUK INTERN) */}
+            {onDelete && !isIntern && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onDelete(reservasi);
+                }}
+                className="py-2.5 px-3 rounded-xl border border-rose-300 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-xs font-bold text-rose-600 dark:text-rose-400 transition-all cursor-pointer h-10 text-center inline-flex items-center gap-1.5"
+                title="Hapus Reservasi Ini"
+              >
+                <Trash2 size={13} />
+                <span className="hidden sm:inline">Hapus</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 justify-end">
             <button
               type="button"
               onClick={() => {
                 onClose();
                 onOpenHpp(reservasi);
               }}
-              className="py-2.5 px-2.5 sm:px-3.5 rounded-xl border border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 text-xs font-extrabold transition-all cursor-pointer h-10 flex-1 sm:flex-initial text-center flex items-center justify-center gap-1.5"
+              className="py-2.5 px-2.5 sm:px-3.5 rounded-xl border border-orange-500/20 bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-500/20 text-xs font-extrabold transition-all cursor-pointer h-10 flex items-center justify-center gap-1.5"
             >
               <FileText size={14} className="shrink-0" />
               <span>Kelola HPP</span>
@@ -386,7 +423,7 @@ export default function ModalDetail({
                 onClose();
                 onOpenEdit(reservasi);
               }}
-              className="py-2.5 px-3 sm:px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer h-10 flex-1 sm:flex-initial text-center flex items-center justify-center gap-1.5"
+              className="py-2.5 px-3 sm:px-4 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer h-10 flex items-center justify-center gap-1.5"
             >
               <span className="sm:hidden">Edit</span>
               <span className="hidden sm:inline">Edit Reservasi</span>

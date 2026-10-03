@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { Reservasi, HppItem, MasterKategoriHpp, StatusPayment } from '@/lib/types';
 import { formatRupiah, formatRibuan, parseCurrency, computeMargin } from '@/lib/formatters';
-import { X, Plus, Trash2, CheckCircle, AlertCircle, DollarSign } from 'lucide-react';
+import { X, Plus, Trash2, CheckCircle, AlertCircle, DollarSign, Lock } from 'lucide-react';
 
 interface ModalHppManagerProps {
   reservasi: Reservasi | null;
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (msg: string) => void;
+  isIntern?: boolean;
 }
 
 interface TempHppItem {
@@ -26,6 +27,7 @@ export default function ModalHppManager({
   isOpen,
   onClose,
   onSuccess,
+  isIntern = false,
 }: ModalHppManagerProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -236,8 +238,7 @@ export default function ModalHppManager({
                 {reservasi.namaTamu} ({reservasi.kode})
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                Nilai Order: <strong className="text-slate-900 dark:text-slate-100">{formatRupiah(reservasi.nilaiOrder)}</strong> | DP:{' '}
-                <strong className="text-emerald-700 dark:text-emerald-400">{formatRupiah(reservasi.dp)}</strong>
+                Nilai Order: <strong className="text-slate-900 dark:text-slate-100">{formatRupiah(reservasi.nilaiOrder)}</strong>
               </p>
             </div>
 
@@ -431,9 +432,16 @@ export default function ModalHppManager({
               <div className="text-2xl font-black text-orange-600 dark:text-orange-400">
                 {formatRupiah(totalHpp)}
               </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                Estimasi Profit: <strong className="text-emerald-700 dark:text-emerald-400">{formatRupiah(profit)}</strong> (Margin: {margin}%)
-              </div>
+              {isIntern ? (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-500 border border-slate-200 dark:border-slate-700">
+                  <Lock className="w-3 h-3 text-slate-400" />
+                  <span>Estimasi Profit &amp; Margin: Terkunci (Akses PIC &amp; Superadmin)</span>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                  Estimasi Profit: <strong className="text-emerald-700 dark:text-emerald-400">{formatRupiah(profit)}</strong> (Margin: {margin}%)
+                </div>
+              )}
             </div>
 
             <button

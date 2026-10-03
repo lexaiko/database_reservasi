@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Reservasi, DashboardKpi } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import { Sidebar, NavTab } from '@/components/Sidebar';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { HeaderBar } from '@/components/HeaderBar';
@@ -18,6 +20,11 @@ import ModalEdit from '@/components/ModalEdit';
 import ModalEditCrewHotel from '@/components/ModalEditCrewHotel';
 import ModalHppManager from '@/components/ModalHppManager';
 import ModalReviewLink from '@/components/ModalReviewLink';
+import { AuthGuard } from '@/components/AuthGuard';
+import AdminSettingsView from '@/components/AdminSettingsView';
+import { LeadsReviewView } from '@/components/LeadsReviewView';
+import { DashboardDateFilter } from '@/components/DashboardDateFilter';
+import { useAuth } from '@/context/AuthContext';
 import { CheckCircle2, AlertTriangle, X, ShieldAlert } from 'lucide-react';
 
 const DEFAULT_KPI: DashboardKpi = {
@@ -47,11 +54,25 @@ const NAMA_BULAN_MAP: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const { profile } = useAuth();
+  const isSuperadmin = profile?.role === 'superadmin';
+  const isIntern = profile?.role === 'intern';
+  const isAdmin = profile?.role === 'admin';
+  const userAssignedPic = (profile?.assignedPic || '').trim();
+  const isPicLocked = !isSuperadmin && Boolean(userAssignedPic);
+
   // Navigation & Layout States
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Guard tab settings: jika bukan superadmin, arahkan ke dashboard
+  useEffect(() => {
+    if (activeTab === 'settings' && profile && !isSuperadmin) {
+      setActiveTab('dashboard');
+    }
+  }, [activeTab, profile, isSuperadmin]);
 
   const handleSelectTab = useCallback((tab: NavTab) => {
     setActiveTab(tab);
@@ -66,7 +87,7 @@ export default function DashboardPage() {
   // Restore activeTab from URL hash or localStorage on initial client mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const VALID_TABS: NavTab[] = ['dashboard', 'reservasi', 'hpp', 'operasional'];
+    const VALID_TABS: NavTab[] = ['dashboard', 'reservasi', 'leads-review', 'hpp', 'operasional', 'settings'];
     const hash = window.location.hash.replace('#', '') as NavTab;
     if (VALID_TABS.includes(hash)) {
       setActiveTab(hash);
@@ -83,7 +104,7 @@ export default function DashboardPage() {
   // Listen for browser back / forward hash navigation
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const VALID_TABS: NavTab[] = ['dashboard', 'reservasi', 'hpp', 'operasional'];
+    const VALID_TABS: NavTab[] = ['dashboard', 'reservasi', 'leads-review', 'hpp', 'operasional', 'settings'];
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '') as NavTab;
       if (VALID_TABS.includes(hash)) {
@@ -104,6 +125,30 @@ export default function DashboardPage() {
   const [topPic, setTopPic] = useState<any[]>([]);
   const [topSumber, setTopSumber] = useState<any[]>([]);
 
+  // PIC List — diambil dari nama akun dengan role 'admin'.
+  // Intern bukan PIC (mereka asisten PIC), superadmin tidak masuk list.
+  // Tambah akun admin baru via Settings → otomatis muncul di filter tanpa edit kode.
+  const [picList, setPicList] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!db) return;
+    getDocs(collection(db, 'users'))
+      .then((snap) => {
+        const names: string[] = [];
+        snap.forEach((d) => {
+          const data = d.data();
+          if (data.role === 'admin' && data.status !== 'inactive') {
+            const n = (data.name || '').trim();
+            if (n) names.push(n);
+          }
+        });
+        setPicList(Array.from(new Set<string>(names)).sort());
+      })
+      .catch(() => {
+        setPicList(['Alvin', 'Bagas', 'Bobi', 'Dela', 'Dio', 'Holiday', 'Kikik']);
+      });
+  }, []);
+
   // Filter & Pagination States
   const [search, setSearch] = useState('');
   const [statusTrip, setStatusTrip] = useState('all');
@@ -113,6 +158,11 @@ export default function DashboardPage() {
   const [pic, setPic] = useState('all');
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
+
+  // Dedicated Dashboard Date Range States
+  const [dashboardStartDate, setDashboardStartDate] = useState('');
+  const [dashboardEndDate, setDashboardEndDate] = useState('');
+  const [dashboardPic, setDashboardPic] = useState('all');
 
   // Status & Feedback States
   const [isLoading, setIsLoading] = useState(true);
@@ -166,8 +216,11 @@ export default function DashboardPage() {
       const q = new URLSearchParams({
         month: finishMonth,
         year: finishYear,
-        pic,
+        pic: dashboardPic !== 'all' ? dashboardPic : pic,
       });
+
+      if (dashboardStartDate) q.set('startDate', dashboardStartDate);
+      if (dashboardEndDate) q.set('endDate', dashboardEndDate);
 
       const res = await fetch(`/api/dashboard?${q.toString()}`);
       const data = await res.json();
@@ -181,9 +234,9 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Error fetching dashboard KPI:', err);
     }
-  }, [finishMonth, finishYear, pic]);
+  }, [finishMonth, finishYear, pic, dashboardStartDate, dashboardEndDate, dashboardPic]);
 
-  // Fetch Reservations Table
+  // Fetch Reservations Table (Load all data so all tabs have full dataset without 50-limit flash)
   const fetchReservations = useCallback(
     async (forceRefresh = false) => {
       setIsLoading(true);
@@ -195,8 +248,7 @@ export default function DashboardPage() {
           finishMonth,
           finishYear,
           pic,
-          page: String(page),
-          limit: String(limit),
+          all: 'true',
         });
 
         if (forceRefresh) {
@@ -206,8 +258,9 @@ export default function DashboardPage() {
         const res = await fetch(`/api/reservasi?${q.toString()}`);
         const data = await res.json();
         if (data.success) {
-          setReservations(data.data || []);
-          setTotalReservations(data.total || 0);
+          const list = data.data || [];
+          setReservations(list);
+          setTotalReservations(data.total || list.length);
         }
       } catch (err) {
         console.error('Error fetching reservations:', err);
@@ -215,14 +268,28 @@ export default function DashboardPage() {
         setIsLoading(false);
       }
     },
-    [search, statusTrip, statusPayment, finishMonth, finishYear, pic, page, limit]
+    [search, statusTrip, statusPayment, finishMonth, finishYear, pic]
   );
+
+  // Client-side pagination for Tab 2 Reservation Table
+  const paginatedReservations = React.useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return reservations.slice(startIndex, startIndex + limit);
+  }, [reservations, page, limit]);
 
   // Initial and reactive load
   useEffect(() => {
     fetchReservations();
     fetchDashboardData();
   }, [fetchReservations, fetchDashboardData]);
+
+  // Kunci PIC jika akun adalah Admin PIC atau Intern (Asisten PIC)
+  useEffect(() => {
+    if (isPicLocked && userAssignedPic) {
+      setPic(userAssignedPic);
+      setDashboardPic(userAssignedPic);
+    }
+  }, [isPicLocked, userAssignedPic]);
 
   // Sync Trip Statuses (Hari H: On Going, Finish: Finish on Review)
   const handleSyncStatuses = async () => {
@@ -249,13 +316,61 @@ export default function DashboardPage() {
     }
   };
 
+  // Handle Hapus Reservasi (Superadmin & Admin PIC, DILARANG UNTUK INTERN)
+  const handleDeleteReservation = async (r: Reservasi) => {
+    if (isIntern) {
+      setToastMessage({
+        type: 'error',
+        text: 'Akses ditolak: Anak magang tidak memiliki izin untuk menghapus data reservasi.',
+      });
+      return;
+    }
+
+    const confirm = window.confirm(
+      `Apakah Anda yakin ingin menghapus reservasi ${r.namaTamu} (${r.kode}) secara permanen dari Google Sheets?`
+    );
+    if (!confirm) return;
+
+    try {
+      const res = await fetch(`/api/reservasi/${encodeURIComponent(r.kode)}`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-role': profile?.role || 'admin',
+        },
+      });
+      const json = await res.json();
+      if (json.success) {
+        setToastMessage({
+          type: 'success',
+          text: `Reservasi ${r.kode} berhasil dihapus dari sistem!`,
+        });
+        fetchReservations(true);
+        fetchDashboardData();
+        if (isDetailModalOpen) {
+          setIsDetailModalOpen(false);
+          setActiveReservation(null);
+        }
+      } else {
+        setToastMessage({
+          type: 'error',
+          text: json.error || 'Gagal menghapus reservasi.',
+        });
+      }
+    } catch (err: any) {
+      setToastMessage({
+        type: 'error',
+        text: err.message || 'Terjadi kesalahan jaringan.',
+      });
+    }
+  };
+
   const handleResetFilters = () => {
     setSearch('');
     setStatusTrip('all');
     setStatusPayment('all');
     setFinishMonth('all');
     setFinishYear('2026');
-    setPic('all');
+    setPic(isPicLocked ? userAssignedPic : 'all');
     setPage(1);
   };
 
@@ -266,7 +381,8 @@ export default function DashboardPage() {
   ).length;
 
   return (
-    <div className="flex h-screen h-[100dvh] w-full bg-background text-foreground overflow-hidden">
+    <AuthGuard>
+      <div className="flex h-screen h-[100dvh] w-full bg-background text-foreground overflow-hidden">
       {/* Desktop Left Sidebar */}
       <div className="hidden md:flex h-full shrink-0">
         <Sidebar
@@ -379,10 +495,35 @@ export default function DashboardPage() {
           {/* TAB 1: DASHBOARD EKSEKUTIF */}
           {activeTab === 'dashboard' && (
             <div className="space-y-6 sm:space-y-8 animate-fade-in">
+              {/* Filter Rentang Waktu Dashboard */}
+              <DashboardDateFilter
+                startDate={dashboardStartDate}
+                endDate={dashboardEndDate}
+                pic={dashboardPic}
+                onDateChange={(start, end) => {
+                  setDashboardStartDate(start);
+                  setDashboardEndDate(end);
+                }}
+                onPicChange={(p) => setDashboardPic(p)}
+                onReset={() => {
+                  setDashboardStartDate('');
+                  setDashboardEndDate('');
+                  setDashboardPic(isPicLocked ? userAssignedPic : 'all');
+                }}
+                picList={picList}
+                isPicLocked={isPicLocked}
+                totalSalesCount={kpi.totalPenjualan}
+              />
+
               <KpiMetrics
                 kpi={kpi}
-                selectedMonthName={selectedMonthName}
+                selectedMonthName={
+                  dashboardStartDate && dashboardEndDate
+                    ? `${dashboardStartDate} s/d ${dashboardEndDate}`
+                    : selectedMonthName
+                }
                 selectedYear={finishYear}
+                isIntern={isIntern}
               />
 
               <SalesCharts
@@ -427,6 +568,8 @@ export default function DashboardPage() {
                     setActiveReservation(r);
                     setIsReviewModalOpen(true);
                   }}
+                  onDelete={!isIntern ? handleDeleteReservation : undefined}
+                  isIntern={isIntern}
                   isLoading={isLoading}
                 />
               </div>
@@ -467,11 +610,13 @@ export default function DashboardPage() {
                   fetchReservations(true);
                   fetchDashboardData();
                 }}
+                isPicLocked={isPicLocked}
+                picList={picList}
                 isLoading={isLoading}
               />
 
               <ReservationTable
-                reservations={reservations}
+                reservations={paginatedReservations}
                 total={totalReservations}
                 page={page}
                 limit={limit}
@@ -494,6 +639,8 @@ export default function DashboardPage() {
                   setActiveReservation(r);
                   setIsReviewModalOpen(true);
                 }}
+                onDelete={!isIntern ? handleDeleteReservation : undefined}
+                isIntern={isIntern}
                 isLoading={isLoading}
               />
             </div>
@@ -505,6 +652,8 @@ export default function DashboardPage() {
               reservations={reservations}
               initialKode={selectedHppKode}
               initialMode={hppInitialMode}
+              assignedPic={userAssignedPic}
+              isIntern={isIntern}
               onRefreshData={() => {
                 fetchReservations(true);
                 fetchDashboardData();
@@ -517,6 +666,7 @@ export default function DashboardPage() {
           {activeTab === 'operasional' && (
             <OperasionalView
               reservations={reservations}
+              assignedPic={userAssignedPic}
               onOpenReview={(r) => {
                 setActiveReservation(r);
                 setIsReviewModalOpen(true);
@@ -535,6 +685,32 @@ export default function DashboardPage() {
               }}
             />
           )}
+
+          {/* TAB: INPUT LEADS, REVIEW & FOTO DOKUMENTASI */}
+          {activeTab === 'leads-review' && (
+            <LeadsReviewView
+              reservations={reservations}
+              assignedPic={userAssignedPic}
+              onReservationUpdated={(updated) => {
+                setReservations((prev) =>
+                  prev.map((r) => (r.kode === updated.kode ? { ...r, ...updated } : r))
+                );
+                setToastMessage({
+                  type: 'success',
+                  text: `Data ${updated.kode} (${updated.namaTamu}) berhasil disimpan!`,
+                });
+              }}
+              onRefresh={() => fetchReservations(true)}
+            />
+          )}
+
+          {/* TAB 5: PENGATURAN SUPERADMIN (CRUD ADMIN & SETTING SHEET) */}
+          {activeTab === 'settings' && isSuperadmin && (
+            <AdminSettingsView
+              currentUserEmail={profile?.email}
+              onSuccessToast={(msg) => setToastMessage({ type: 'success', text: msg })}
+            />
+          )}
         </div>
 
         {/* Footer */}
@@ -549,6 +725,8 @@ export default function DashboardPage() {
       <ModalNewReservation
         isOpen={isNewModalOpen}
         onClose={() => setIsNewModalOpen(false)}
+        defaultPic={userAssignedPic || 'Dela'}
+        isPicLocked={isPicLocked}
         onSuccess={(msg) => {
           setToastMessage({ type: 'success', text: msg });
           fetchReservations(true);
@@ -581,6 +759,8 @@ export default function DashboardPage() {
           setActiveReservation(r);
           setIsEditModalOpen(true);
         }}
+        onDelete={!isIntern ? handleDeleteReservation : undefined}
+        isIntern={isIntern}
       />
 
       <ModalEdit
@@ -590,6 +770,7 @@ export default function DashboardPage() {
           setIsEditModalOpen(false);
           setActiveReservation(null);
         }}
+        isPicLocked={isPicLocked}
         onSuccess={(msg) => {
           setToastMessage({ type: 'success', text: msg });
           fetchReservations(true);
@@ -618,6 +799,7 @@ export default function DashboardPage() {
           setIsHppModalOpen(false);
           setActiveReservation(null);
         }}
+        isIntern={isIntern}
         onSuccess={(msg) => {
           setToastMessage({ type: 'success', text: msg });
           fetchReservations(true);
@@ -652,5 +834,6 @@ export default function DashboardPage() {
         unpaidCount={unpaidReservationsCount}
       />
     </div>
+    </AuthGuard>
   );
 }

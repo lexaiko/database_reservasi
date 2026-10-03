@@ -33,6 +33,7 @@ interface OperasionalViewProps {
   onViewDetail: (r: Reservasi) => void;
   onEdit: (r: Reservasi) => void;
   onEditCrewHotel?: (r: Reservasi) => void;
+  assignedPic?: string;
 }
 
 const NAMA_BULAN = [
@@ -123,6 +124,7 @@ export const OperasionalView: React.FC<OperasionalViewProps> = ({
   onViewDetail,
   onEdit,
   onEditCrewHotel,
+  assignedPic,
 }) => {
   // Main view mode: 'calendar' (default, modern interactive) or 'cards' (traditional list)
   const [viewMode, setViewMode] = useState<'calendar' | 'cards'>('calendar');
@@ -142,9 +144,16 @@ export const OperasionalView: React.FC<OperasionalViewProps> = ({
 
   // Filters for Calendar
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [picFilter, setPicFilter] = useState<string>('all');
+  const [picFilter, setPicFilter] = useState<string>(assignedPic || 'all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [agendaMode, setAgendaMode] = useState<'day' | 'month'>('day');
+
+  // Sync picFilter if assignedPic changes
+  React.useEffect(() => {
+    if (assignedPic) {
+      setPicFilter(assignedPic);
+    }
+  }, [assignedPic]);
 
   // Filters for Cards Mode
   const [cardTab, setCardTab] = useState<'ongoing' | 'schedule' | 'review'>('ongoing');
@@ -546,18 +555,25 @@ export const OperasionalView: React.FC<OperasionalViewProps> = ({
                     <option value="cancel">Cancel</option>
                   </select>
 
-                  <select
-                    value={picFilter}
-                    onChange={(e) => setPicFilter(e.target.value)}
-                    className="h-9 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none"
-                  >
-                    <option value="all">Semua PIC</option>
-                    {availablePics.map((pic) => (
-                      <option key={pic} value={pic}>
-                        {pic}
-                      </option>
-                    ))}
-                  </select>
+                  {assignedPic ? (
+                    <div className="h-9 px-3 rounded-xl border border-border bg-muted/60 text-xs font-bold text-foreground flex items-center gap-1.5 shrink-0">
+                      <UserCheck size={12} className="text-orange-500" />
+                      <span>PIC: {assignedPic}</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={picFilter}
+                      onChange={(e) => setPicFilter(e.target.value)}
+                      className="h-9 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none"
+                    >
+                      <option value="all">Semua PIC</option>
+                      {availablePics.map((pic) => (
+                        <option key={pic} value={pic}>
+                          {pic}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
             </div>

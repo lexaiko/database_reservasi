@@ -37,7 +37,36 @@ function setCached(key: string, data: any, ttl = CACHE_TTL_MS): void {
   cache.set(key, { data, expiresAt: Date.now() + ttl });
 }
 
+import { db } from './firebase';
+import { doc, getDoc } from 'firebase/firestore';
+
+let dynamicSpreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '';
+let dynamicSheetReservasi = process.env.SHEET_RESERVASI || 'Database Reservasi';
+let dynamicSheetHpp = process.env.SHEET_HPP || 'RincianHPP';
+let lastFetchedConfig = 0;
+
+export async function refreshSheetConfigFromFirestore(force = false): Promise<void> {
+  if (!force && Date.now() - lastFetchedConfig < 60000 && dynamicSpreadsheetId) {
+    return;
+  }
+  try {
+    if (db) {
+      const snap = await getDoc(doc(db, 'settings', 'sheets'));
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.spreadsheetId) dynamicSpreadsheetId = d.spreadsheetId;
+        if (d.sheetReservasi) dynamicSheetReservasi = d.sheetReservasi;
+        if (d.sheetHpp) dynamicSheetHpp = d.sheetHpp;
+        lastFetchedConfig = Date.now();
+      }
+    }
+  } catch (e) {
+    // Fallback diam ke env jika gagal baca Firestore
+  }
+}
+
 export function invalidateCache(keyPrefix?: string): void {
+  lastFetchedConfig = 0;
   if (keyPrefix) {
     for (const k of cache.keys()) {
       if (k.startsWith(keyPrefix)) cache.delete(k);
@@ -48,11 +77,19 @@ export function invalidateCache(keyPrefix?: string): void {
 }
 
 export function getSpreadsheetId(): string {
-  return (
-    process.env.GOOGLE_SHEETS_SPREADSHEET_ID ||
-    'your_spreadsheet_id_here'
-  );
+  const id = dynamicSpreadsheetId || process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+  if (!id) throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID env var / Firestore settings tidak diset.');
+  return id;
 }
+
+export const SHEET_NAMES = {
+  get reservasi() {
+    return dynamicSheetReservasi || process.env.SHEET_RESERVASI || 'Database Reservasi';
+  },
+  get hpp() {
+    return dynamicSheetHpp || process.env.SHEET_HPP || 'RincianHPP';
+  },
+};
 
 export function getSheetsAuth() {
   // 1. Prioritas Vercel Serverless / Production via Environment Variable
@@ -96,6 +133,7 @@ function toSheetDateFormat(dateStr: string): string {
  * Ambil semua data reservasi dari sheet "Database Reservasi"
  */
 export async function getAllReservasi(forceRefresh = false): Promise<Reservasi[]> {
+  await refreshSheetConfigFromFirestore(forceRefresh);
   const cacheKey = 'all_reservasi';
   if (!forceRefresh) {
     const cached = getCached<Reservasi[]>(cacheKey);
@@ -105,7 +143,7 @@ export async function getAllReservasi(forceRefresh = false): Promise<Reservasi[]
   const sheets = getSheetsService();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: getSpreadsheetId(),
-    range: "'Database Reservasi'!A2:AG",
+    range: `'${SHEET_NAMES.reservasi}'!A2:AG`,
     valueRenderOption: 'UNFORMATTED_VALUE',
     dateTimeRenderOption: 'FORMATTED_STRING',
   });
@@ -214,6 +252,7 @@ export async function getAllReservasi(forceRefresh = false): Promise<Reservasi[]
  * Tambah reservasi baru ke Google Sheets
  */
 export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean; rowNumber: number }> {
+  await refreshSheetConfigFromFirestore();
   const sheets = getSheetsService();
   const spreadsheetId = getSpreadsheetId();
 
@@ -286,7 +325,7 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
 
   const appendRes = await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: "'Database Reservasi'!A:AG",
+    range: `'${SHEET_NAMES.reservasi}'!A:AG`,
     valueInputOption: 'USER_ENTERED',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {
@@ -294,15 +333,35 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
     },
   });
 
-  invalidateCache();
-
   let rowNumber = 0;
   const updatedRange = appendRes.data.updates?.updatedRange || '';
   const match = updatedRange.match(/!A(\d+):/);
   if (match) {
     rowNumber = parseInt(match[1], 10);
+    // Tulis formula Sisa Pelunasan (AA) dan Profit & Margin (AF:AG) otomatis untuk baris baru
+    try {
+      await sheets.spreadsheets.values.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          valueInputOption: 'USER_ENTERED',
+          data: [
+            {
+              range: `'${SHEET_NAMES.reservasi}'!AA${rowNumber}`,
+              values: [[`=X${rowNumber}-Y${rowNumber}`]],
+            },
+            {
+              range: `'${SHEET_NAMES.reservasi}'!AF${rowNumber}:AG${rowNumber}`,
+              values: [[`=X${rowNumber}-AE${rowNumber}`, `=IF(OR(X${rowNumber}=""; X${rowNumber}=0); 0; AF${rowNumber}/X${rowNumber})`]],
+            },
+          ],
+        },
+      });
+    } catch (fmtErr) {
+      console.warn(`Gagal menulis formula otomatis untuk baris ${rowNumber}:`, fmtErr);
+    }
   }
 
+  invalidateCache();
   return { ok: true, rowNumber };
 }
 
@@ -380,18 +439,18 @@ export async function updateReservasi(
     nilaiOrder,
     dp,
     tglDp,
-    sisa,
+    `=X${rowNumber}-Y${rowNumber}`,
     sanitize(target.tglPelunasan),
     statusPayment,
     sanitize(target.notesPayment),
     target.hpp,
-    profit,
-    margin,
+    `=X${rowNumber}-AE${rowNumber}`,
+    `=IF(OR(X${rowNumber}=""; X${rowNumber}=0); 0; AF${rowNumber}/X${rowNumber})`,
   ];
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `'Database Reservasi'!A${rowNumber}:AG${rowNumber}`,
+    range: `'${SHEET_NAMES.reservasi}'!A${rowNumber}:AG${rowNumber}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [updatedRow],
@@ -410,6 +469,93 @@ export async function updateReviewLink(kode: string, linkReview: string): Promis
     linkReview,
     statusTrip: 'Finish (Review)',
   });
+}
+
+/**
+ * Hapus Data Reservasi dari Google Sheets (dan rincian HPP terkait)
+ */
+export async function deleteReservasi(kode: string): Promise<{ ok: boolean; deletedKode: string }> {
+  await refreshSheetConfigFromFirestore();
+  const cleanKode = kode.trim().toLowerCase();
+  const all = await getAllReservasi(true);
+  const target = all.find((r) => r.kode.trim().toLowerCase() === cleanKode);
+
+  if (!target) {
+    throw new Error(`Data reservasi dengan kode ${kode} tidak ditemukan.`);
+  }
+
+  const sheets = getSheetsService();
+  const spreadsheetId = getSpreadsheetId();
+
+  // 1. Dapatkan SheetId (gid) untuk tab Reservasi
+  const meta = await sheets.spreadsheets.get({ spreadsheetId });
+  const targetTitle = (SHEET_NAMES.reservasi || 'Database Reservasi').trim().toLowerCase();
+  const reservasiSheet = meta.data.sheets?.find((s) => {
+    const t = (s.properties?.title || '').trim().toLowerCase();
+    return t === targetTitle || t === 'database reservasi' || t === 'reservasi';
+  });
+
+  if (!reservasiSheet || reservasiSheet.properties?.sheetId === undefined) {
+    throw new Error(`Sheet '${SHEET_NAMES.reservasi}' tidak ditemukan di spreadsheet.`);
+  }
+
+  const sheetId = reservasiSheet.properties.sheetId;
+
+  // 2. Hapus baris reservasi dari Google Sheets
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId,
+              dimension: 'ROWS',
+              startIndex: target.rowNumber - 1, // 0-indexed
+              endIndex: target.rowNumber,
+            },
+          },
+        },
+      ],
+    },
+  });
+
+  // 3. Bersihkan rincian HPP milik kode ini jika ada
+  try {
+    const resHpp = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `'${SHEET_NAMES.hpp}'!A2:H`,
+      valueRenderOption: 'UNFORMATTED_VALUE',
+    });
+
+    const allHppRows = resHpp.data.values || [];
+    const remainingHppRows = allHppRows.filter(
+      (r) => String(r[1] || '').trim().toLowerCase() !== cleanKode
+    );
+
+    if (remainingHppRows.length !== allHppRows.length) {
+      await sheets.spreadsheets.values.clear({
+        spreadsheetId,
+        range: `'${SHEET_NAMES.hpp}'!A2:H`,
+      });
+
+      if (remainingHppRows.length > 0) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range: `'${SHEET_NAMES.hpp}'!A2:H${remainingHppRows.length + 1}`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: remainingHppRows,
+          },
+        });
+      }
+    }
+  } catch (hppErr) {
+    console.warn(`Peringatan: Gagal membersihkan rincian HPP untuk ${kode}:`, hppErr);
+  }
+
+  invalidateCache();
+  return { ok: true, deletedKode: target.kode };
 }
 
 /**
@@ -433,7 +579,7 @@ export async function syncComputedTripStatuses(): Promise<{ updatedCount: number
 
     if (computed !== item.statusTrip && item.statusTrip !== 'Cancel') {
       updates.push({
-        range: `'Database Reservasi'!U${item.rowNumber}`,
+        range: `'${SHEET_NAMES.reservasi}'!U${item.rowNumber}`,
         values: [[computed]],
       });
       updatedCount++;
@@ -470,7 +616,7 @@ export async function getRincianHppByKode(kode: string): Promise<{
   const sheets = getSheetsService();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: getSpreadsheetId(),
-    range: "'RincianHPP'!A2:H",
+    range: `'${SHEET_NAMES.hpp}'!A2:H`,
     valueRenderOption: 'UNFORMATTED_VALUE',
   });
 
@@ -554,7 +700,7 @@ export async function saveHpp(
   // 1. Ambil seluruh data RincianHPP untuk menghapus rincian lama dari kode ini
   const resHpp = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "'RincianHPP'!A2:H",
+    range: `'${SHEET_NAMES.hpp}'!A2:H`,
     valueRenderOption: 'UNFORMATTED_VALUE',
   });
 
@@ -590,13 +736,13 @@ export async function saveHpp(
   // Kosongkan range lama dulu jika barisnya berkurang
   await sheets.spreadsheets.values.clear({
     spreadsheetId,
-    range: "'RincianHPP'!A2:H",
+    range: `'${SHEET_NAMES.hpp}'!A2:H`,
   });
 
   if (finalHppData.length > 0) {
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `'RincianHPP'!A2:H${finalHppData.length + 1}`,
+      range: `'${SHEET_NAMES.hpp}'!A2:H${finalHppData.length + 1}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: finalHppData,
@@ -642,7 +788,7 @@ export async function saveHpp(
 
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `'Database Reservasi'!AC${target.rowNumber}:AG${target.rowNumber}`,
+      range: `'${SHEET_NAMES.reservasi}'!AC${target.rowNumber}:AG${target.rowNumber}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [
@@ -650,8 +796,8 @@ export async function saveHpp(
             finalPaymentStatus, // AC: Status Payment
             target.notesPayment || '', // AD: Notes Payment
             totalHpp,           // AE: HPP
-            profit,             // AF: Profit
-            `${margin.toString().replace('.', ',')}%`, // AG: Margin (%) sesuai format Sheet (cth: "34,6%")
+            `=X${target.rowNumber}-AE${target.rowNumber}`, // AF: Profit formula
+            `=IF(OR(X${target.rowNumber}=""; X${target.rowNumber}=0); 0; AF${target.rowNumber}/X${target.rowNumber})`, // AG: Margin formula
           ],
         ],
       },
@@ -684,19 +830,29 @@ export async function getDashboardData(filters?: SalesFilterOptions): Promise<{
   const selectedMonth = filters?.month && filters.month !== 'all' ? Number(filters.month) : null;
   const selectedYear = filters?.year && filters.year !== 'all' ? Number(filters.year) : 2026;
   const selectedPic = filters?.pic && filters.pic !== 'all' ? filters.pic.toLowerCase() : null;
+  const startDate = filters?.startDate && filters.startDate !== 'all' ? filters.startDate : null;
+  const endDate = filters?.endDate && filters.endDate !== 'all' ? filters.endDate : null;
 
-  // 1. Filter omset diakui berdasarkan TANGGAL FINISH TRIP!
+  // 1. Filter omset diakui berdasarkan TANGGAL FINISH TRIP (atau START TRIP jika belum terisi)!
   const filteredSales = activeReservations.filter((r) => {
     // Saring PIC jika dipilih
     if (selectedPic && r.picAgen.toLowerCase() !== selectedPic) return false;
 
-    // Filter tanggal finish trip
-    const finishYmd = r.finishTrip || r.startTrip;
+    // Filter tanggal finish trip (atau start trip jika finish trip kosong)
+    const rawTripDate = r.finishTrip || r.startTrip;
+    const finishYmd = normalizeDateToYMD(rawTripDate);
     if (!finishYmd || !finishYmd.includes('-')) return false;
 
-    const [y, m] = finishYmd.split('-').map(Number);
-    if (selectedYear && y !== selectedYear) return false;
-    if (selectedMonth && m !== selectedMonth) return false;
+    // Jika filter rentang tanggal (startDate / endDate) aktif:
+    if (startDate && finishYmd < startDate) return false;
+    if (endDate && finishYmd > endDate) return false;
+
+    // Jika TIDAK ADA rentang tanggal spesifik, gunakan filter month & year:
+    if (!startDate && !endDate) {
+      const [y, m] = finishYmd.split('-').map(Number);
+      if (selectedYear && y !== selectedYear) return false;
+      if (selectedMonth && m !== selectedMonth) return false;
+    }
 
     return true;
   });

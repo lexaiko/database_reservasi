@@ -27,6 +27,7 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
+  Lock,
 } from 'lucide-react';
 
 interface HppViewProps {
@@ -34,6 +35,7 @@ interface HppViewProps {
   onOpenHppModal: (r: Reservasi) => void;
   onOpenDetailModal?: (r: Reservasi) => void;
   isLoading?: boolean;
+  isIntern?: boolean;
 }
 
 type HppFilterTab = 'all' | 'with-hpp' | 'without-hpp' | 'needs-update';
@@ -67,6 +69,7 @@ export const HppView: React.FC<HppViewProps> = ({
   onOpenHppModal,
   onOpenDetailModal,
   isLoading = false,
+  isIntern = false,
 }) => {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<HppFilterTab>('all');
@@ -307,41 +310,59 @@ export const HppView: React.FC<HppViewProps> = ({
         {/* Card 2: Gross Profit */}
         <div className="col-span-1 p-3 sm:p-5 rounded-2xl bg-card border border-border shadow-xs space-y-1 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block truncate">
-              Gross Profit (AF)
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block truncate flex items-center gap-1">
+              {isIntern && <Lock className="w-3 h-3 text-muted-foreground" />}
+              <span>Gross Profit (AF)</span>
             </span>
-            {hasActiveFilters && (
+            {hasActiveFilters && !isIntern && (
               <span className="text-[9px] sm:text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 shrink-0">
                 Laba
               </span>
             )}
           </div>
-          <div className="text-xs sm:text-xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums leading-tight break-all">
-            {formatRupiah(totalProfitDisplay)}
-          </div>
+          {isIntern ? (
+            <div className="text-xs sm:text-sm font-bold text-muted-foreground leading-tight py-1">
+              Terkunci
+            </div>
+          ) : (
+            <div className="text-xs sm:text-xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums leading-tight break-all">
+              {formatRupiah(totalProfitDisplay)}
+            </div>
+          )}
           <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium block truncate">
-            {hasActiveFilters
-              ? `Laba dari filter aktif`
-              : `Omset dikurangi HPP`}
+            {isIntern
+              ? 'Akses khusus PIC & Superadmin'
+              : hasActiveFilters
+              ? 'Laba dari filter aktif'
+              : 'Omset dikurangi HPP'}
           </span>
         </div>
 
         {/* Card 3: Rata-rata Margin (2-Cols span on mobile, full width row) */}
         <div className="col-span-2 sm:col-span-1 p-3 sm:p-5 rounded-2xl bg-card border border-border shadow-xs transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block">
-              Rata-rata Margin Operasional (AG)
+            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider block flex items-center gap-1">
+              {isIntern && <Lock className="w-3 h-3 text-muted-foreground" />}
+              <span>Rata-rata Margin Operasional (AG)</span>
             </span>
             <TrendingUp size={15} className="text-primary shrink-0" />
           </div>
           <div className="flex items-baseline justify-between sm:block mt-1 sm:mt-1.5">
-            <div className="text-lg sm:text-2xl font-black text-primary tabular-nums">
-              {avgMarginDisplay}%
-            </div>
+            {isIntern ? (
+              <div className="text-xs sm:text-sm font-bold text-muted-foreground py-0.5">
+                Terkunci
+              </div>
+            ) : (
+              <div className="text-lg sm:text-2xl font-black text-primary tabular-nums">
+                {avgMarginDisplay}%
+              </div>
+            )}
             <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium block sm:mt-1">
-              {hasActiveFilters
-                ? `Rata-rata margin data tersaring`
-                : `Persentase profitabilitas rata-rata`}
+              {isIntern
+                ? 'Akses khusus PIC & Superadmin'
+                : hasActiveFilters
+                ? 'Rata-rata margin data tersaring'
+                : 'Persentase profitabilitas rata-rata'}
             </span>
           </div>
         </div>
@@ -1012,8 +1033,12 @@ export const HppView: React.FC<HppViewProps> = ({
                       <span className="text-[9px] uppercase font-bold text-muted-foreground block mb-0.5">
                         Gross Profit (AF)
                       </span>
-                      <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums block text-xs">
-                        {hasHpp ? formatRupiah(r.profit) : '-'}
+                      <span className="font-black text-xs tabular-nums block">
+                        {isIntern ? (
+                          <span className="text-muted-foreground font-semibold text-[11px]">Terkunci</span>
+                        ) : (
+                          <span className="text-emerald-600 dark:text-emerald-400">{hasHpp ? formatRupiah(r.profit) : '-'}</span>
+                        )}
                       </span>
                     </div>
 
@@ -1022,7 +1047,11 @@ export const HppView: React.FC<HppViewProps> = ({
                         Margin % (AG)
                       </span>
                       <span className="font-black text-foreground tabular-nums block text-xs">
-                        {hasHpp ? `${r.margin}%` : '0%'}
+                        {isIntern ? (
+                          <span className="text-muted-foreground font-semibold text-[11px]">Terkunci</span>
+                        ) : (
+                          hasHpp ? `${r.margin}%` : '0%'
+                        )}
                       </span>
                     </div>
                   </div>
@@ -1065,7 +1094,6 @@ export const HppView: React.FC<HppViewProps> = ({
                 <th className="py-3.5 px-4 w-12 text-center">No</th>
                 <th className="py-3.5 px-4">Kode &amp; ID</th>
                 <th className="py-3.5 px-4">Tamu &amp; PIC</th>
-                <th className="py-3.5 px-4">Paket &amp; Jadwal</th>
                 <th className="py-3.5 px-4">Nilai Order &amp; Status</th>
                 <th className="py-3.5 px-4 text-right">Total HPP (AE)</th>
                 <th className="py-3.5 px-4 text-right">Gross Profit (AF)</th>
@@ -1076,7 +1104,7 @@ export const HppView: React.FC<HppViewProps> = ({
             <tbody className="divide-y divide-border text-xs font-medium text-foreground">
               {isLoading ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-muted-foreground font-semibold">
+                  <td colSpan={8} className="py-12 text-center text-muted-foreground font-semibold">
                     <div className="inline-flex items-center gap-2">
                       <RefreshCw size={16} className="animate-spin text-primary" />
                       <span>Memuat seluruh data HPP...</span>
@@ -1085,7 +1113,7 @@ export const HppView: React.FC<HppViewProps> = ({
                 </tr>
               ) : paginatedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-muted-foreground">
+                  <td colSpan={8} className="py-12 text-center text-muted-foreground">
                     <div className="space-y-2">
                       <p className="font-semibold text-foreground">
                         Tidak ada reservasi yang sesuai dengan filter yang dipilih.
@@ -1141,21 +1169,6 @@ export const HppView: React.FC<HppViewProps> = ({
                         </div>
                       </td>
 
-                      {/* Paket & Jadwal */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-foreground text-xs truncate max-w-[180px]" title={r.paket}>
-                          {r.paket}
-                        </div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                          <Calendar size={11} className="shrink-0 text-muted-foreground" />
-                          <span>
-                            {formatDateDisplay(r.startTrip)} - {formatDateDisplay(r.finishTrip)}
-                          </span>
-                          <span>•</span>
-                          <span>{r.pax} Pax</span>
-                        </div>
-                      </td>
-
                       {/* Nilai Order & Status Bayar */}
                       <td className="py-3.5 px-4">
                         <div className="font-extrabold text-xs text-foreground tabular-nums">
@@ -1171,11 +1184,6 @@ export const HppView: React.FC<HppViewProps> = ({
                           >
                             {r.statusPayment || 'DP 1'}
                           </span>
-                          {r.sisaPelunasan > 0 && (
-                            <span className="text-[10px] text-rose-500 font-bold tabular-nums">
-                              Sisa: {formatRupiah(r.sisaPelunasan)}
-                            </span>
-                          )}
                         </div>
                       </td>
 
@@ -1193,13 +1201,21 @@ export const HppView: React.FC<HppViewProps> = ({
                       </td>
 
                       {/* Gross Profit */}
-                      <td className="py-3.5 px-4 text-right tabular-nums font-black text-xs text-emerald-600 dark:text-emerald-400">
-                        {hasHpp ? formatRupiah(r.profit) : '-'}
+                      <td className="py-3.5 px-4 text-right tabular-nums font-black text-xs">
+                        {isIntern ? (
+                          <span className="text-[11px] text-muted-foreground font-semibold">Terkunci</span>
+                        ) : (
+                          <span className="text-emerald-600 dark:text-emerald-400">{hasHpp ? formatRupiah(r.profit) : '-'}</span>
+                        )}
                       </td>
 
                       {/* Margin (%) */}
                       <td className="py-3.5 px-4 text-right tabular-nums font-black text-xs">
-                        {hasHpp ? `${r.margin}%` : '0%'}
+                        {isIntern ? (
+                          <span className="text-[11px] text-muted-foreground font-semibold">Terkunci</span>
+                        ) : (
+                          hasHpp ? `${r.margin}%` : '0%'
+                        )}
                       </td>
 
                       {/* Aksi Ganda: Detail HPP & Update HPP */}

@@ -111,6 +111,8 @@ export interface DashboardKpi {
 export interface SalesFilterOptions {
   month?: string;              // 1-12 or 'all'
   year?: string;               // 2026 or 'all'
+  startDate?: string;          // YYYY-MM-DD
+  endDate?: string;            // YYYY-MM-DD
   pic?: string;
   statusPayment?: string;
   statusTrip?: string;

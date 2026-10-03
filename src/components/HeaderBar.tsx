@@ -24,14 +24,24 @@ const TAB_TITLES: Record<NavTab, { title: string; subtitle: string; tag: string 
     tag: 'DATABASE',
   },
   hpp: {
-    title: 'HPP & Status Tamu',
+    title: 'Update HPP',
     subtitle: 'Pusat manajemen update status pembayaran, rincian biaya vendor, dan laporan resmi HPP',
-    tag: 'STATUS & HPP',
+    tag: 'UPDATE HPP',
   },
   operasional: {
     title: 'Jadwal & Hari H',
     subtitle: 'Manajemen kesiapan armada, driver, hotel, crew, dan follow-up review tamu',
     tag: 'DISPATCH',
+  },
+  'leads-review': {
+    title: 'Input Source & Review',
+    subtitle: 'Katalog update sumber closing leads, link ulasan review, dan link dokumentasi foto trip',
+    tag: 'SOURCE & REVIEW',
+  },
+  settings: {
+    title: 'Pengaturan & Akses Admin',
+    subtitle: 'Konfigurasi integrasi Google Sheets dan manajemen whitelist akun pengguna',
+    tag: 'SUPERADMIN',
   },
 };
 
@@ -75,7 +85,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             onClick={onSyncStatuses}
             disabled={isSyncing}
             title="Sinkronisasi status trip hari H & finish trip ke Google Sheets"
-            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs font-bold rounded-xl text-foreground bg-secondary hover:bg-muted border border-border/80 transition-all disabled:opacity-60 cursor-pointer shadow-2xs min-h-[38px] active:scale-95"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-2 text-xs font-bold rounded-xl text-foreground bg-muted/40 hover:bg-muted border border-border/80 transition-all disabled:opacity-60 cursor-pointer shadow-2xs min-h-[40px] active:scale-95"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-primary' : 'text-muted-foreground'}`} />
             <span className="hidden sm:inline">{isSyncing ? 'Sinkronisasi...' : 'Auto-Sync'}</span>
@@ -83,7 +93,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
           <button
             onClick={onOpenNewModal}
-            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 active:scale-95 transition-all cursor-pointer min-h-[38px]"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs font-bold rounded-xl text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm shadow-primary/20 active:scale-95 transition-all cursor-pointer min-h-[40px]"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Reservasi Baru</span>

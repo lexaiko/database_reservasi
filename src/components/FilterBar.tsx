@@ -13,6 +13,7 @@ import {
   RotateCcw,
   ChevronDown,
   ChevronUp,
+  Lock,
 } from 'lucide-react';
 
 interface FilterBarProps {
@@ -30,6 +31,8 @@ interface FilterBarProps {
   onPicChange: (val: string) => void;
   onResetFilters: () => void;
   onRefreshData: () => void;
+  isPicLocked?: boolean;
+  picList?: string[];
   isLoading: boolean;
 }
 
@@ -71,6 +74,8 @@ export default function FilterBar({
   onPicChange,
   onResetFilters,
   onRefreshData,
+  isPicLocked = false,
+  picList = ['Dela', 'Bagas', 'Kikik', 'Bobi', 'Dio'],
   isLoading,
 }: FilterBarProps) {
   // Filter drawer/panel toggle state (mobile & desktop)
@@ -273,30 +278,32 @@ export default function FilterBar({
           {/* Filter 4: PIC Reservasi */}
           <div>
             <label className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-              <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>PIC Reservasi</span>
+              {isPicLocked ? <Lock className="w-3.5 h-3.5 text-primary" /> : <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />}
+              <span>PIC Reservasi {isPicLocked && '(Terkunci)'}</span>
             </label>
-            <div className="grid grid-cols-4 gap-1.5">
-              {[
-                { val: 'all', label: 'Semua' },
-                { val: 'dela', label: 'Dela' },
-                { val: 'alvin', label: 'Alvin' },
-                { val: 'holiday', label: 'Holiday' },
-              ].map((p) => (
-                <button
-                  key={p.val}
-                  type="button"
-                  onClick={() => onPicChange(p.val)}
-                  className={`py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border capitalize ${
-                    pic === p.val
-                      ? 'bg-primary text-primary-foreground border-primary font-extrabold shadow-2xs'
-                      : 'bg-card text-foreground hover:bg-muted border-border/60'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+            {isPicLocked ? (
+              <div className="p-2.5 rounded-xl bg-muted/60 border border-border/80 flex items-center gap-2">
+                <Lock size={13} className="text-primary" />
+                <span className="text-xs font-bold text-foreground capitalize">PIC: {pic || 'Dela'}</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                {[{ val: 'all', label: 'Semua' }, ...picList.map((p) => ({ val: p.toLowerCase(), label: p }))].map((p) => (
+                  <button
+                    key={p.val}
+                    type="button"
+                    onClick={() => onPicChange(p.val)}
+                    className={`py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border capitalize ${
+                      pic.toLowerCase() === p.val.toLowerCase()
+                        ? 'bg-primary text-primary-foreground border-primary font-extrabold shadow-2xs'
+                        : 'bg-card text-foreground hover:bg-muted border-border/60'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Close / Apply button for mobile */}
@@ -435,30 +442,32 @@ export default function FilterBar({
             {/* PIC Reservasi */}
             <div>
               <label className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
-                <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>PIC Reservasi</span>
+                {isPicLocked ? <Lock className="w-3.5 h-3.5 text-primary" /> : <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />}
+                <span>PIC Reservasi {isPicLocked && '(Terkunci)'}</span>
               </label>
-              <div className="grid grid-cols-4 gap-1.5">
-                {[
-                  { val: 'all', label: 'Semua' },
-                  { val: 'dela', label: 'Dela' },
-                  { val: 'alvin', label: 'Alvin' },
-                  { val: 'holiday', label: 'Holiday' },
-                ].map((p) => (
-                  <button
-                    key={p.val}
-                    type="button"
-                    onClick={() => onPicChange(p.val)}
-                    className={`py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border capitalize ${
-                      pic === p.val
-                        ? 'bg-primary text-primary-foreground border-primary font-extrabold shadow-2xs'
-                        : 'bg-card text-foreground hover:bg-muted border-border/60'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+              {isPicLocked ? (
+                <div className="p-2 rounded-xl bg-muted/60 border border-border/80 flex items-center gap-2">
+                  <Lock size={13} className="text-primary" />
+                  <span className="text-xs font-bold text-foreground capitalize">PIC: {pic || 'Dela'}</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+                  {[{ val: 'all', label: 'Semua' }, ...picList.map((p) => ({ val: p.toLowerCase(), label: p }))].map((p) => (
+                    <button
+                      key={p.val}
+                      type="button"
+                      onClick={() => onPicChange(p.val)}
+                      className={`py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border capitalize ${
+                        pic.toLowerCase() === p.val.toLowerCase()
+                          ? 'bg-primary text-primary-foreground border-primary font-extrabold shadow-2xs'
+                          : 'bg-card text-foreground hover:bg-muted border-border/60'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

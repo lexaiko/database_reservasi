@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Search,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 
 interface ReservationTableProps {
@@ -26,6 +27,8 @@ interface ReservationTableProps {
   onEdit: (r: Reservasi) => void;
   onOpenHpp: (r: Reservasi) => void;
   onOpenReview: (r: Reservasi) => void;
+  onDelete?: (r: Reservasi) => void;
+  isIntern?: boolean;
   isLoading: boolean;
 }
 
@@ -39,6 +42,8 @@ export default function ReservationTable({
   onEdit,
   onOpenHpp,
   onOpenReview,
+  onDelete,
+  isIntern = false,
   isLoading,
 }: ReservationTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -90,20 +95,20 @@ export default function ReservationTable({
   const renderPaymentBadge = (r: Reservasi) => {
     if (r.statusPayment === 'Lunas') {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40 uppercase tracking-wider">
           LUNAS
         </span>
       );
     }
     if (r.statusPayment === 'Cancel') {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 uppercase tracking-wider">
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40 uppercase tracking-wider">
           CANCEL
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wider">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40 uppercase tracking-wider">
         {r.statusPayment || 'DP 1'}
       </span>
     );
@@ -219,23 +224,15 @@ export default function ReservationTable({
                     <span className="text-[9px] text-muted-foreground uppercase font-bold block">
                       Nilai Order
                     </span>
-                    <span className="font-mono font-bold text-foreground">
+                    <span className="font-mono font-black text-foreground">
                       {formatRupiah(r.nilaiOrder)}
                     </span>
                   </div>
                   <div className="text-right">
                     <span className="text-[9px] text-muted-foreground uppercase font-bold block">
-                      Sisa Pelunasan
+                      Status Bayar
                     </span>
-                    {r.sisaPelunasan > 0 ? (
-                      <span className="font-mono font-black text-rose-600 dark:text-rose-400">
-                        {formatRupiah(r.sisaPelunasan)}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                        Lunas
-                      </span>
-                    )}
+                    {renderPaymentBadge(r)}
                   </div>
                 </div>
 
@@ -258,30 +255,40 @@ export default function ReservationTable({
 
                 {/* Quick Action Buttons (Touch targets) */}
                 <div
-                  className="pt-2 border-t border-border/50 grid grid-cols-3 gap-2"
+                  className={`pt-2 border-t border-border/50 grid ${onDelete && !isIntern ? 'grid-cols-4' : 'grid-cols-3'} gap-1.5`}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
                     onClick={() => onViewDetail(r)}
-                    className="py-2 px-2 rounded-xl border border-border text-xs font-bold text-foreground bg-card hover:bg-muted active:scale-95 transition-all text-center flex items-center justify-center gap-1.5 min-h-[40px] shadow-2xs cursor-pointer"
+                    className="py-2 px-1 rounded-xl border border-border text-xs font-bold text-foreground bg-card hover:bg-muted active:scale-95 transition-all text-center flex items-center justify-center gap-1 min-h-[40px] shadow-2xs cursor-pointer"
                   >
-                    <Eye size={14} />
+                    <Eye size={13} />
                     <span>Detail</span>
                   </button>
                   <button
                     onClick={() => onEdit(r)}
-                    className="py-2 px-2 rounded-xl border border-border text-xs font-bold text-primary bg-card hover:bg-primary/10 active:scale-95 transition-all text-center flex items-center justify-center gap-1.5 min-h-[40px] shadow-2xs cursor-pointer"
+                    className="py-2 px-1 rounded-xl border border-border text-xs font-bold text-primary bg-card hover:bg-primary/10 active:scale-95 transition-all text-center flex items-center justify-center gap-1 min-h-[40px] shadow-2xs cursor-pointer"
                   >
-                    <Edit3 size={14} />
+                    <Edit3 size={13} />
                     <span>Edit</span>
                   </button>
                   <button
                     onClick={() => onOpenHpp(r)}
-                    className="py-2 px-2 rounded-xl border border-border text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-card hover:bg-emerald-500/10 active:scale-95 transition-all text-center flex items-center justify-center gap-1.5 min-h-[40px] shadow-2xs cursor-pointer"
+                    className="py-2 px-1 rounded-xl border border-border text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-card hover:bg-emerald-500/10 active:scale-95 transition-all text-center flex items-center justify-center gap-1 min-h-[40px] shadow-2xs cursor-pointer"
                   >
-                    <DollarSign size={14} />
+                    <DollarSign size={13} />
                     <span>HPP</span>
                   </button>
+                  {onDelete && !isIntern && (
+                    <button
+                      onClick={() => onDelete(r)}
+                      className="py-2 px-1 rounded-xl border border-rose-300 dark:border-rose-900/60 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 active:scale-95 transition-all text-center flex items-center justify-center gap-1 min-h-[40px] shadow-2xs cursor-pointer"
+                      title="Hapus Reservasi"
+                    >
+                      <Trash2 size={13} />
+                      <span>Hapus</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -414,17 +421,6 @@ export default function ReservationTable({
                         </span>
                         {renderPaymentBadge(r)}
                       </div>
-                      <div className="text-[10px] mt-0.5">
-                        {r.sisaPelunasan > 0 ? (
-                          <span className="text-rose-500 font-bold">
-                            Sisa: {formatRupiah(r.sisaPelunasan)}
-                          </span>
-                        ) : (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                            Lunas (DP: {formatRupiah(r.dp)})
-                          </span>
-                        )}
-                      </div>
 
                       {/* Notifikasi suruh update HPP jika ada overpayment */}
                       {r.needsHppUpdate && (
@@ -492,6 +488,16 @@ export default function ReservationTable({
                         >
                           <DollarSign size={13} />
                         </button>
+
+                        {onDelete && !isIntern && (
+                          <button
+                            onClick={() => onDelete(r)}
+                            className="h-7 w-7 inline-flex items-center justify-center rounded-lg border border-border/70 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-all cursor-pointer shadow-2xs"
+                            title="Hapus Reservasi"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

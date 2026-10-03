@@ -28,7 +28,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     },
     {
       id: 'hpp' as NavTab,
-      label: 'HPP Tamu',
+      label: 'Update HPP',
       icon: Receipt,
       badge: unpaidCount > 0 ? unpaidCount : undefined,
     },

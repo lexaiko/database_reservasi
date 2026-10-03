@@ -24,6 +24,7 @@ interface ModalEditProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (msg: string) => void;
+  isPicLocked?: boolean;
 }
 
 export default function ModalEdit({
@@ -31,6 +32,7 @@ export default function ModalEdit({
   isOpen,
   onClose,
   onSuccess,
+  isPicLocked = false,
 }: ModalEditProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -737,12 +739,20 @@ export default function ModalEdit({
                     <select
                       value={picAgen}
                       onChange={(e) => setPicAgen(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 text-xs font-bold text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-orange-500"
+                      disabled={isPicLocked}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 text-xs font-bold text-slate-900 dark:text-slate-100 disabled:opacity-75 disabled:cursor-not-allowed focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-orange-500"
                     >
-                      <option value="Dela">Dela</option>
-                      <option value="Alvin">Alvin</option>
-                      <option value="Holiday">Holiday</option>
+                      {['Dela', 'Bagas', 'Kikik', 'Bobi', 'Dio'].map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
                     </select>
+                    {isPicLocked && (
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        PIC terkunci otomatis sesuai akun Anda ({picAgen}).
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -901,7 +911,7 @@ export default function ModalEdit({
                   />
                 </div>
 
-                {/* Sisa Piutang Card */}
+                {/* Ringkasan Finansial Tagihan & DP */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
                   <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold">
                     <span>Total Tagihan:</span>
@@ -911,19 +921,12 @@ export default function ModalEdit({
                     <span>DP Masuk:</span>
                     <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatRupiah(dp)}</span>
                   </div>
-                  <div className="h-px bg-slate-200 dark:bg-slate-800 my-1" />
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Sisa Pelunasan (Piutang)
-                    </span>
-                    <span
-                      className={`text-lg font-black tracking-tight ${
-                        isLunas ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'
-                      }`}
-                    >
-                      {isLunas ? 'Rp 0 (LUNAS)' : formatRupiah(sisa)}
-                    </span>
-                  </div>
+                  {isLunas && (
+                    <div className="pt-1.5 border-t border-slate-200 dark:border-slate-800 flex justify-between text-xs">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">Status Pembayaran:</span>
+                      <span className="font-black text-emerald-600 dark:text-emerald-400">LUNAS</span>
+                    </div>
+                  )}
                 </div>
 
                 {isOverpaid && (
@@ -979,14 +982,10 @@ export default function ModalEdit({
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                  Sisa Piutang:
+                  Status Bayar:
                 </span>
-                <span
-                  className={`text-xs font-black tabular-nums ${
-                    isLunas ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'
-                  }`}
-                >
-                  {isLunas ? 'Rp 0 (LUNAS)' : formatRupiah(sisa)}
+                <span className="text-xs font-black text-foreground">
+                  {statusPayment}
                 </span>
               </div>
             </div>

@@ -9,11 +9,15 @@ export async function GET(req: NextRequest) {
     const month = searchParams.get('month') || 'all';
     const year = searchParams.get('year') || '2026';
     const pic = searchParams.get('pic') || 'all';
+    const startDate = searchParams.get('startDate') || '';
+    const endDate = searchParams.get('endDate') || '';
 
     const data = await getDashboardData({
       month,
       year,
       pic,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
     });
 
     return NextResponse.json({

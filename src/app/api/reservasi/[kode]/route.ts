@@ -4,6 +4,7 @@ import {
   updateReservasi,
   updateReviewLink,
   getRincianHppByKode,
+  deleteReservasi,
 } from '@/lib/googleSheets';
 import { ReservasiInput } from '@/lib/types';
 
@@ -83,3 +84,40 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  props: { params: Promise<{ kode: string }> }
+) {
+  let kode = '';
+  try {
+    const resolvedParams = await props.params;
+    kode = decodeURIComponent(resolvedParams.kode || '').trim();
+
+    // Ambil header otentikasi role dari request jika ada
+    const userRole = req.headers.get('x-user-role') || '';
+    if (userRole === 'intern') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Akses ditolak: Akun Anak Magang (Intern) tidak memiliki hak menghapus data.',
+        },
+        { status: 403 }
+      );
+    }
+
+    const res = await deleteReservasi(kode);
+
+    return NextResponse.json({
+      success: true,
+      message: `Data reservasi ${res.deletedKode} dan rincian HPP terkait berhasil dihapus dari Google Sheets!`,
+    });
+  } catch (error: any) {
+    console.error(`Error deleting reservation ${kode}:`, error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Gagal menghapus reservasi.' },
+      { status: 500 }
+    );
+  }
+}
+
