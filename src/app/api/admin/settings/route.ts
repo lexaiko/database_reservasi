@@ -12,14 +12,19 @@ export async function GET() {
     let updatedBy = '';
 
     if (db) {
-      const snap = await getDoc(doc(db, 'settings', 'sheets'));
-      if (snap.exists()) {
-        const d = snap.data();
-        if (d.spreadsheetId) spreadsheetId = d.spreadsheetId;
-        if (d.sheetReservasi) sheetReservasi = d.sheetReservasi;
-        if (d.sheetHpp) sheetHpp = d.sheetHpp;
-        if (d.updatedAt) updatedAt = d.updatedAt;
-        if (d.updatedBy) updatedBy = d.updatedBy;
+      try {
+        const snap = await getDoc(doc(db, 'settings', 'sheets'));
+        if (snap.exists()) {
+          const d = snap.data();
+          if (d.spreadsheetId) spreadsheetId = d.spreadsheetId;
+          if (d.sheetReservasi) sheetReservasi = d.sheetReservasi;
+          if (d.sheetHpp) sheetHpp = d.sheetHpp;
+          if (d.updatedAt) updatedAt = d.updatedAt;
+          if (d.updatedBy) updatedBy = d.updatedBy;
+        }
+      } catch (firestoreErr) {
+        // Fallback aman ke variabel env jika server Firestore rules membatasi read tanpa auth token
+        console.warn('[settings route] Firestore read fallback to env:', firestoreErr);
       }
     }
 
@@ -36,10 +41,17 @@ export async function GET() {
     });
   } catch (err: any) {
     console.error('Error fetching sheet settings:', err);
-    return NextResponse.json(
-      { ok: false, error: err.message || 'Gagal mengambil pengaturan sheet' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      ok: true,
+      data: {
+        spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '',
+        sheetReservasi: process.env.SHEET_RESERVASI || 'Database Reservasi',
+        sheetHpp: process.env.SHEET_HPP || 'RincianHPP',
+        updatedAt: '',
+        updatedBy: '',
+        isFromFirestore: false,
+      },
+    });
   }
 }
 

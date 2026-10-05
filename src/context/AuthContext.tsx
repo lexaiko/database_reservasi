@@ -74,7 +74,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: data.name || data.Name || firebaseUser.displayName || 'Admin TripBanyuwangi',
           role: (data.role || data.Role || 'admin').toString().toLowerCase() as any,
           status: 'active',
+          isPic: data.isPic !== undefined ? Boolean(data.isPic) : true,
           assignedPic: data.assignedPic || data.AssignedPic || '',
+          allowedPics: Array.isArray(data.allowedPics) ? data.allowedPics : [],
+          accountPassword: data.accountPassword,
+          passwordUpdatedAt: data.passwordUpdatedAt,
           createdAt: data.createdAt,
         };
       }
@@ -102,7 +106,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: data.name || data.Name || firebaseUser.displayName || 'Admin TripBanyuwangi',
             role: (data.role || data.Role || 'admin').toString().toLowerCase() as any,
             status: 'active',
+            isPic: data.isPic !== undefined ? Boolean(data.isPic) : true,
             assignedPic: data.assignedPic || data.AssignedPic || '',
+            allowedPics: Array.isArray(data.allowedPics) ? data.allowedPics : [],
+            accountPassword: data.accountPassword,
+            passwordUpdatedAt: data.passwordUpdatedAt,
             createdAt: data.createdAt,
           };
         }
@@ -130,7 +138,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: data.name || data.Name || firebaseUser.displayName || 'Admin TripBanyuwangi',
             role: (data.role || data.Role || 'admin').toString().toLowerCase() as any,
             status: 'active',
+            isPic: data.isPic !== undefined ? Boolean(data.isPic) : true,
             assignedPic: data.assignedPic || data.AssignedPic || '',
+            allowedPics: Array.isArray(data.allowedPics) ? data.allowedPics : [],
+            accountPassword: data.accountPassword,
+            passwordUpdatedAt: data.passwordUpdatedAt,
             createdAt: data.createdAt,
           };
         }
@@ -215,6 +227,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(cred.user);
       setProfile(userProf);
       setError(null);
+
+      // Sinkronisasikan password aktif ke dokumen profil di Firestore jika belum tersimpan
+      if (db && cred.user?.uid) {
+        try {
+          await setDoc(
+            doc(db, 'users', cred.user.uid),
+            {
+              accountPassword: pass,
+              passwordUpdatedAt: new Date().toISOString(),
+            },
+            { merge: true }
+          );
+        } catch {
+          // Abaikan jika Firestore merge gagal
+        }
+      }
     } catch (err: any) {
       if (auth) {
         await signOut(auth).catch(() => {});

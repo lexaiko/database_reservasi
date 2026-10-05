@@ -42,9 +42,12 @@ export async function GET(req: NextRequest) {
       list = list.filter((r) => r.statusPayment === statusPayment);
     }
 
-    // Filter PIC
+    // Filter PIC (Mendukung PIC tunggal atau multi-PIC comma-separated: e.g. "Dela,Alvin")
     if (pic !== 'all') {
-      list = list.filter((r) => r.picAgen.toLowerCase() === pic);
+      const picArray = pic.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
+      if (picArray.length > 0) {
+        list = list.filter((r) => picArray.includes(r.picAgen.toLowerCase()));
+      }
     }
 
     // Filter Finish Trip (Pengakuan Penjualan)

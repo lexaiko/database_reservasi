@@ -20,11 +20,12 @@ export default function SalesCharts({
 }: SalesChartsProps) {
   const [activeTrenType, setActiveTrenType] = useState<'revenue' | 'pax'>('revenue');
 
-  // Max value calculation for bar scaling
-  const maxTrenVal = Math.max(
+  // Max value calculation for bar scaling with 25% vertical headroom for tooltip
+  const rawMax = Math.max(
     ...trenPenjualan.map((t) => (activeTrenType === 'revenue' ? t.revenue : t.pax)),
     1
   );
+  const maxTrenVal = rawMax * 1.25;
 
   const maxPaketCount = Math.max(...topPaket.map((p) => p.count), 1);
   const maxPicRevenue = Math.max(...topPic.map((p) => p.revenue), 1);
@@ -33,7 +34,7 @@ export default function SalesCharts({
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
       {/* 1. Tren Penjualan Bulanan (Span 2) */}
       <div className="lg:col-span-2 p-4 sm:p-5 rounded-2xl bg-card border border-border/80 shadow-xs flex flex-col justify-between">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center shrink-0">
               <TrendingUp size={16} />
@@ -73,7 +74,7 @@ export default function SalesCharts({
         </div>
 
         {/* Bar Visualizer */}
-        <div className="h-60 flex items-end gap-2 sm:gap-3 pt-6 pb-2 px-2 overflow-x-auto border-b border-border/60">
+        <div className="h-64 sm:h-72 flex items-end gap-2 sm:gap-3 pt-14 pb-2 px-3 overflow-x-auto border-b border-border/60 no-scrollbar">
           {trenPenjualan.length === 0 ? (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs font-semibold">
               Belum ada data tren finish trip
@@ -83,25 +84,35 @@ export default function SalesCharts({
               const val = activeTrenType === 'revenue' ? item.revenue : item.pax;
               const heightPct = Math.max(8, Math.round((val / maxTrenVal) * 100));
 
+              // Clamping tooltip position on edge bars so it doesn't clip off left or right
+              const alignClass =
+                idx === 0
+                  ? 'left-0'
+                  : idx === trenPenjualan.length - 1
+                  ? 'right-0'
+                  : 'left-1/2 -translate-x-1/2';
+
               return (
                 <div
                   key={idx}
                   className="flex-1 min-w-[44px] flex flex-col items-center justify-end h-full group relative"
                 >
-                  {/* Tooltip Hover */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 z-20 pointer-events-none bg-foreground text-background text-[11px] py-1 px-2.5 rounded-lg whitespace-nowrap shadow-lg flex flex-col items-center">
-                    <span className="font-bold">
+                  {/* Tooltip Hover - diletakkan di dalam headroom atas (top-2), aman dari overflow */}
+                  <div
+                    className={`opacity-0 group-hover:opacity-100 transition-all duration-150 absolute top-2 z-30 pointer-events-none bg-slate-900/95 dark:bg-slate-100/95 text-white dark:text-slate-900 text-[11px] py-1.5 px-3 rounded-xl whitespace-nowrap shadow-xl flex flex-col items-center border border-white/10 dark:border-slate-900/10 backdrop-blur-xs ${alignClass}`}
+                  >
+                    <span className="font-extrabold tracking-tight">
                       {activeTrenType === 'revenue' ? formatRupiah(val) : `${val} Pax`}
                     </span>
-                    <span className="text-[9px] opacity-80 font-medium">
-                      {item.tripCount} Trip
+                    <span className="text-[10px] opacity-80 font-medium">
+                      {item.tripCount} Trip Selesai
                     </span>
                   </div>
 
                   {/* Bar */}
                   <div
                     style={{ height: `${heightPct}%` }}
-                    className="w-full max-w-[38px] bg-gradient-to-t from-orange-600 to-amber-500 rounded-t-lg group-hover:brightness-110 transition-all duration-300 shadow-xs"
+                    className="w-full max-w-[38px] bg-gradient-to-t from-orange-600 to-amber-500 rounded-t-lg group-hover:brightness-110 group-hover:shadow-md transition-all duration-200 shadow-xs"
                   />
 
                   {/* Label Bulan */}

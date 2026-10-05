@@ -86,3 +86,6 @@ Desktop.ini
 scratch/
 tmp/
 temp/
+
+.vercel
+.env*

@@ -25,14 +25,16 @@ interface ModalNewReservationProps {
   onSuccess: (message: string) => void;
   defaultPic?: string;
   isPicLocked?: boolean;
+  picList?: string[];
 }
 
 export default function ModalNewReservation({
   isOpen,
   onClose,
   onSuccess,
-  defaultPic = 'Dela',
+  defaultPic = '',
   isPicLocked = false,
+  picList = [],
 }: ModalNewReservationProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -54,13 +56,17 @@ export default function ModalNewReservation({
   const [day4, setDay4] = useState<string[]>([]);
   const [activeDayTab, setActiveDayTab] = useState<number>(1);
   const [catatan, setCatatan] = useState('');
-  const [picAgen, setPicAgen] = useState(defaultPic || 'Dela');
+  const [picAgen, setPicAgen] = useState(defaultPic || (picList.length > 0 ? picList[0] : ''));
 
   useEffect(() => {
-    if (isOpen && defaultPic) {
-      setPicAgen(defaultPic);
+    if (isOpen) {
+      if (defaultPic) {
+        setPicAgen(defaultPic);
+      } else if (picList.length > 0) {
+        setPicAgen(picList[0]);
+      }
     }
-  }, [isOpen, defaultPic]);
+  }, [isOpen, defaultPic, picList]);
   const [sumberLeads, setSumberLeads] = useState('Instagram');
   const [nilaiOrderStr, setNilaiOrderStr] = useState('');
   const [dpStr, setDpStr] = useState('');
@@ -271,7 +277,12 @@ export default function ModalNewReservation({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto sm:overflow-hidden bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 lg:p-6 animate-fade-in">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
+      }}
+      className="fixed inset-0 z-50 overflow-y-auto sm:overflow-hidden bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 lg:p-6 animate-fade-in"
+    >
       <div className="bg-slate-50 dark:bg-slate-900 rounded-t-2xl sm:rounded-3xl w-full max-w-6xl h-[95dvh] sm:h-auto sm:max-h-[92vh] flex flex-col shadow-2xl border-t sm:border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100 relative">
         
         {/* Header Modal */}
@@ -743,7 +754,7 @@ export default function ModalNewReservation({
                       disabled={isPicLocked}
                       className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 text-xs font-bold text-slate-900 dark:text-slate-100 disabled:opacity-75 disabled:cursor-not-allowed focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-orange-500"
                     >
-                      {['Dela', 'Bagas', 'Kikik', 'Bobi', 'Dio'].map((p) => (
+                      {picList.map((p) => (
                         <option key={p} value={p}>
                           {p}
                         </option>

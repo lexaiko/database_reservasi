@@ -13,7 +13,6 @@ import {
   Camera,
   MessageSquare,
   Share2,
-  Sparkles,
   X,
   Save,
   AlertCircle,
@@ -40,14 +39,14 @@ export const SUMBER_LEADS_OPTIONS: string[] = [
   'Lainnya',
 ];
 
-interface LeadsReviewViewProps {
+interface SourceReviewViewProps {
   reservations: Reservasi[];
   assignedPic?: string;
   onReservationUpdated?: (updated: Reservasi) => void;
   onRefresh?: () => void;
 }
 
-export const LeadsReviewView: React.FC<LeadsReviewViewProps> = ({
+export const SourceReviewView: React.FC<SourceReviewViewProps> = ({
   reservations: initialReservations,
   assignedPic,
   onReservationUpdated,
@@ -109,17 +108,20 @@ export const LeadsReviewView: React.FC<LeadsReviewViewProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  // Load ALL reservations from API so it doesn't get capped at 50
+  // Load reservations from API, scoped by assignedPic if set
   const loadAllData = async (forceRefresh = false) => {
     try {
       setIsLoadingAll(true);
-      const res = await fetch(`/api/reservasi?all=true${forceRefresh ? '&refresh=true' : ''}`);
+      const q = new URLSearchParams({ all: 'true' });
+      if (forceRefresh) q.set('refresh', 'true');
+      if (assignedPic) q.set('pic', assignedPic);
+      const res = await fetch(`/api/reservasi?${q.toString()}`);
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setAllReservations(json.data);
       }
     } catch (err) {
-      console.error('Failed to load all reservations for leads review:', err);
+      console.error('Failed to load reservations for source & review:', err);
     } finally {
       setIsLoadingAll(false);
     }
@@ -214,7 +216,9 @@ export const LeadsReviewView: React.FC<LeadsReviewViewProps> = ({
   const rawDataset = allReservations.length > 0 ? allReservations : initialReservations;
   const activeDataset = useMemo(() => {
     if (!assignedPic) return rawDataset;
-    return rawDataset.filter((r) => r.picAgen?.toLowerCase() === assignedPic.toLowerCase());
+    const picArray = assignedPic.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
+    if (picArray.length === 0) return rawDataset;
+    return rawDataset.filter((r) => picArray.includes(r.picAgen?.toLowerCase() || ''));
   }, [rawDataset, assignedPic]);
 
   // Statistics
@@ -317,7 +321,7 @@ export const LeadsReviewView: React.FC<LeadsReviewViewProps> = ({
             <span className="text-[10px] text-muted-foreground">Asal channel closing</span>
           </div>
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5" />
+            <Share2 className="w-5 h-5" />
           </div>
         </div>
 
@@ -825,7 +829,12 @@ export const LeadsReviewView: React.FC<LeadsReviewViewProps> = ({
 
       {/* 5. POP-UP FORM MODAL UNTUK UPDATE LEADS & REVIEW */}
       {isModalOpen && selectedReservasi && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSaving) handleCloseModal();
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+        >
           <div className="bg-card border border-border w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between gap-3 bg-muted/40">
@@ -1000,4 +1009,4 @@ export const LeadsReviewView: React.FC<LeadsReviewViewProps> = ({
   );
 };
 
-export default LeadsReviewView;
+export default SourceReviewView;

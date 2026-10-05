@@ -68,10 +68,12 @@ export default function HppManagerView({
   const [activeKode, setActiveKode] = useState<string>(initialKode || '');
   const [searchInput, setSearchInput] = useState<string>('');
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  // Scoped reservations according to assignedPic (if admin/intern)
+  // Scoped reservations according to assignedPic (if admin/intern/non-pic admin)
   const scopedReservationsList = useMemo(() => {
     if (!assignedPic) return reservations;
-    return reservations.filter((r) => (r.picAgen || '').toLowerCase() === assignedPic.toLowerCase());
+    const picArray = assignedPic.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
+    if (picArray.length === 0) return reservations;
+    return reservations.filter((r) => picArray.includes((r.picAgen || '').toLowerCase()));
   }, [reservations, assignedPic]);
 
   // Selected reservation from scoped reservations list

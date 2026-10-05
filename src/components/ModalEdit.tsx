@@ -25,6 +25,7 @@ interface ModalEditProps {
   onClose: () => void;
   onSuccess: (msg: string) => void;
   isPicLocked?: boolean;
+  picList?: string[];
 }
 
 export default function ModalEdit({
@@ -33,6 +34,7 @@ export default function ModalEdit({
   onClose,
   onSuccess,
   isPicLocked = false,
+  picList = [],
 }: ModalEditProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -53,7 +55,7 @@ export default function ModalEdit({
   const [day4, setDay4] = useState<string[]>([]);
   const [activeDayTab, setActiveDayTab] = useState<number>(1);
   const [catatan, setCatatan] = useState('');
-  const [picAgen, setPicAgen] = useState('Dela');
+  const [picAgen, setPicAgen] = useState('');
   const [sumberLeads, setSumberLeads] = useState('Instagram');
   const [statusTrip, setStatusTrip] = useState('On Schedule (Not Ready)');
   const [statusPayment, setStatusPayment] = useState('DP 1');
@@ -90,7 +92,7 @@ export default function ModalEdit({
       setDay3(reservasi.day3 ? reservasi.day3.split(',').map((s) => s.trim()).filter(Boolean) : []);
       setDay4(reservasi.day4 ? reservasi.day4.split(',').map((s) => s.trim()).filter(Boolean) : []);
       setCatatan(reservasi.catatan || '');
-      setPicAgen(reservasi.picAgen || 'Dela');
+      setPicAgen(reservasi.picAgen || (picList.length > 0 ? picList[0] : ''));
       setSumberLeads(reservasi.sumberLeads || 'Instagram');
       setStatusTrip(reservasi.statusTrip || 'On Schedule (Not Ready)');
       setStatusPayment(reservasi.statusPayment || 'DP 1');
@@ -272,7 +274,12 @@ export default function ModalEdit({
   if (!isOpen || !reservasi) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto sm:overflow-hidden bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 lg:p-6 animate-fade-in">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
+      }}
+      className="fixed inset-0 z-50 overflow-y-auto sm:overflow-hidden bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 lg:p-6 animate-fade-in"
+    >
       <div className="bg-slate-50 dark:bg-slate-900 rounded-t-2xl sm:rounded-3xl w-full max-w-6xl h-[95dvh] sm:h-auto sm:max-h-[92vh] flex flex-col shadow-2xl border-t sm:border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100 relative">
         
         {/* Header Modal */}
@@ -742,7 +749,7 @@ export default function ModalEdit({
                       disabled={isPicLocked}
                       className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/90 text-xs font-bold text-slate-900 dark:text-slate-100 disabled:opacity-75 disabled:cursor-not-allowed focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-orange-500"
                     >
-                      {['Dela', 'Bagas', 'Kikik', 'Bobi', 'Dio'].map((p) => (
+                      {picList.map((p) => (
                         <option key={p} value={p}>
                           {p}
                         </option>

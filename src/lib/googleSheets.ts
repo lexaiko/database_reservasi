@@ -277,6 +277,22 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
     return str;
   };
 
+  // Ambil nomor baris target sebelum insert agar rumus langsung terisi di newRow
+  let estimatedRow = 0;
+  try {
+    const colARes = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `'${SHEET_NAMES.reservasi}'!A:A`,
+    });
+    estimatedRow = (colARes.data.values?.length || 0) + 1;
+  } catch (err) {
+    // Fallback jika gagal hitung baris
+  }
+
+  const formulaAA = estimatedRow >= 2 ? `=X${estimatedRow}-Y${estimatedRow}` : sisa;
+  const formulaAF = estimatedRow >= 2 ? `=X${estimatedRow}-AE${estimatedRow}` : '';
+  const formulaAG = estimatedRow >= 2 ? `=IF(OR(X${estimatedRow}=""; X${estimatedRow}=0); 0; AF${estimatedRow}/X${estimatedRow})` : '';
+
   // Struktur kolom A sampai AG (33 kolom):
   // A: KODE, B: NAMA TAMU, C: WA, D: IG, E: TIKTOK
   // F: START, G: FINISH, H: PAX, I: TRIP, J: PAKET
@@ -314,13 +330,13 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
     nilaiOrder,                      // Kolom X
     dp,                              // Kolom Y
     tglDpFmt,                        // Kolom Z
-    sisa,                            // Kolom AA: Sisa Pelunasan
+    formulaAA,                       // Kolom AA: Sisa Pelunasan (Formula)
     '',                              // Kolom AB: Tgl Pelunasan
     initialStatusPayment,            // Kolom AC: "DP 1" atau "Lunas"
     '',                              // Kolom AD: Notes Payment
     '',                              // Kolom AE: HPP (kosong saat awal masuk)
-    '',                              // Kolom AF: Profit (dihitung otomatis oleh ARRAYFORMULA di Sheet)
-    '',                              // Kolom AG: Margin (%) (dihitung otomatis oleh ARRAYFORMULA di Sheet)
+    formulaAF,                       // Kolom AF: Profit (Formula)
+    formulaAG,                       // Kolom AG: Margin (%) (Formula)
   ];
 
   const appendRes = await sheets.spreadsheets.values.append({
@@ -333,12 +349,15 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
     },
   });
 
-  let rowNumber = 0;
+  let rowNumber = estimatedRow;
   const updatedRange = appendRes.data.updates?.updatedRange || '';
-  const match = updatedRange.match(/!A(\d+):/);
+  const match = updatedRange.match(/!A(\d+):/) || updatedRange.match(/!A(\d+)$/);
   if (match) {
     rowNumber = parseInt(match[1], 10);
-    // Tulis formula Sisa Pelunasan (AA) dan Profit & Margin (AF:AG) otomatis untuk baris baru
+  }
+
+  // Jika nomor baris aktual berbeda dengan estimasi, perbarui formulanya sesuai nomor baris aktual
+  if (rowNumber >= 2 && rowNumber !== estimatedRow) {
     try {
       await sheets.spreadsheets.values.batchUpdate({
         spreadsheetId,
@@ -357,7 +376,7 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
         },
       });
     } catch (fmtErr) {
-      console.warn(`Gagal menulis formula otomatis untuk baris ${rowNumber}:`, fmtErr);
+      console.warn(`Gagal menyelaraskan formula otomatis untuk baris ${rowNumber}:`, fmtErr);
     }
   }
 
@@ -829,14 +848,18 @@ export async function getDashboardData(filters?: SalesFilterOptions): Promise<{
 
   const selectedMonth = filters?.month && filters.month !== 'all' ? Number(filters.month) : null;
   const selectedYear = filters?.year && filters.year !== 'all' ? Number(filters.year) : 2026;
-  const selectedPic = filters?.pic && filters.pic !== 'all' ? filters.pic.toLowerCase() : null;
+  const selectedPics = filters?.pic && filters.pic !== 'all'
+    ? filters.pic.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean)
+    : null;
   const startDate = filters?.startDate && filters.startDate !== 'all' ? filters.startDate : null;
   const endDate = filters?.endDate && filters.endDate !== 'all' ? filters.endDate : null;
 
   // 1. Filter omset diakui berdasarkan TANGGAL FINISH TRIP (atau START TRIP jika belum terisi)!
   const filteredSales = activeReservations.filter((r) => {
-    // Saring PIC jika dipilih
-    if (selectedPic && r.picAgen.toLowerCase() !== selectedPic) return false;
+    // Saring PIC jika dipilih (mendukung single atau multi PIC)
+    if (selectedPics && selectedPics.length > 0) {
+      if (!selectedPics.includes((r.picAgen || '').trim().toLowerCase())) return false;
+    }
 
     // Filter tanggal finish trip (atau start trip jika finish trip kosong)
     const rawTripDate = r.finishTrip || r.startTrip;
@@ -871,8 +894,12 @@ export async function getDashboardData(filters?: SalesFilterOptions): Promise<{
   const grossProfit = Math.max(0, totalRevenue - totalHpp);
   const grossMargin = totalRevenue > 0 && totalHpp > 0 ? computeMargin(totalRevenue, totalHpp) : 0;
 
-  // 3. Piutang (semua reservasi yang belum lunas)
-  const outstandingPiutang = activeReservations
+  // 3. Piutang (semua reservasi yang belum lunas, disaring menurut PIC jika filter PIC aktif)
+  const scopedForPiutang = selectedPics && selectedPics.length > 0
+    ? activeReservations.filter((r) => selectedPics.includes((r.picAgen || '').toLowerCase()))
+    : activeReservations;
+
+  const outstandingPiutang = scopedForPiutang
     .filter((r) => r.statusPayment !== 'Lunas' && r.sisaPelunasan > 0)
     .sort((a, b) => {
       const da = new Date(a.finishTrip || a.startTrip).getTime();
@@ -882,9 +909,13 @@ export async function getDashboardData(filters?: SalesFilterOptions): Promise<{
 
   const totalBelumLunas = outstandingPiutang.reduce((acc, cur) => acc + cur.sisaPelunasan, 0);
 
-  // 4. Tren Penjualan Bulanan (Berdasarkan Finish Trip)
+  // 4. Tren Penjualan Bulanan (Berdasarkan Finish Trip, disaring menurut PIC jika filter PIC aktif)
+  const monthlyDataset = selectedPics && selectedPics.length > 0
+    ? activeReservations.filter((r) => selectedPics.includes((r.picAgen || '').toLowerCase()))
+    : activeReservations;
+
   const monthlyAgg: Record<string, { revenue: number; pax: number; tripCount: number }> = {};
-  for (const r of activeReservations) {
+  for (const r of monthlyDataset) {
     const fYmd = r.finishTrip || r.startTrip;
     if (!fYmd || !fYmd.includes('-')) continue;
     const [y, m] = fYmd.split('-');

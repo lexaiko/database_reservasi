@@ -17,6 +17,7 @@ import {
   FileSpreadsheet,
   LogOut,
   Sliders,
+  Key,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -30,6 +31,7 @@ interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   unpaidCount?: number;
+  onOpenChangePassword?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -39,6 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleTheme,
   isCollapsed,
   onToggleCollapse,
+  onOpenChangePassword,
 }) => {
   const { profile, logout } = useAuth();
   const isSuperadmin = profile?.role === 'superadmin';
@@ -88,11 +91,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const userName = profile?.name || 'Admin Workspace';
   const roleType = profile?.role || 'admin';
   const assignedPic = profile?.assignedPic || '';
+  const isNonPicAdmin = roleType === 'admin' && profile?.isPic === false;
   const userRoleBadge =
     roleType === 'superadmin'
       ? 'SUPERADMIN'
       : roleType === 'intern'
       ? `INTERN • ${assignedPic || 'MAGANG'}`
+      : isNonPicAdmin
+      ? 'ADMIN • NON-PIC'
       : `PIC • ${assignedPic || 'ADMIN'}`;
   const userInitials = profile?.name
     ? profile.name
@@ -211,15 +217,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </div>
 
-            {/* Logout button */}
-            <button
-              type="button"
-              onClick={() => logout()}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
-              title="Keluar dari akun"
-            >
-              <LogOut size={16} />
-            </button>
+            {/* Action buttons */}
+            <div className={`flex items-center gap-1 shrink-0 ${isCollapsed ? 'flex-col' : ''}`}>
+              {onOpenChangePassword && (
+                <button
+                  type="button"
+                  onClick={onOpenChangePassword}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                  title="Ganti Password Akun Saya"
+                >
+                  <Key size={15} />
+                </button>
+              )}
+              {/* Logout button */}
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                title="Keluar dari akun"
+              >
+                <LogOut size={15} />
+              </button>
+            </div>
           </div>
         </div>
 

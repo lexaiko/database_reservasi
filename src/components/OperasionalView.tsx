@@ -232,7 +232,10 @@ export const OperasionalView: React.FC<OperasionalViewProps> = ({
     }
 
     if (picFilter !== 'all') {
-      list = list.filter((r) => r.picAgen.toLowerCase() === picFilter.toLowerCase());
+      const picArray = picFilter.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
+      if (picArray.length > 0) {
+        list = list.filter((r) => picArray.includes(r.picAgen.toLowerCase()));
+      }
     }
 
     return list;
@@ -555,7 +558,7 @@ export const OperasionalView: React.FC<OperasionalViewProps> = ({
                     <option value="cancel">Cancel</option>
                   </select>
 
-                  {assignedPic ? (
+                  {assignedPic && !assignedPic.includes(',') ? (
                     <div className="h-9 px-3 rounded-xl border border-border bg-muted/60 text-xs font-bold text-foreground flex items-center gap-1.5 shrink-0">
                       <UserCheck size={12} className="text-orange-500" />
                       <span>PIC: {assignedPic}</span>
@@ -564,10 +567,15 @@ export const OperasionalView: React.FC<OperasionalViewProps> = ({
                     <select
                       value={picFilter}
                       onChange={(e) => setPicFilter(e.target.value)}
-                      className="h-9 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none"
+                      className="h-9 px-2.5 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none cursor-pointer capitalize"
                     >
-                      <option value="all">Semua PIC</option>
-                      {availablePics.map((pic) => (
+                      <option value={assignedPic || 'all'}>
+                        {assignedPic ? 'Semua Sekat Diizinkan' : 'Semua PIC'}
+                      </option>
+                      {(assignedPic
+                        ? assignedPic.split(',').map((p) => p.trim()).filter(Boolean)
+                        : availablePics
+                      ).map((pic) => (
                         <option key={pic} value={pic}>
                           {pic}
                         </option>

@@ -79,7 +79,12 @@ export default function ModalEditCrewHotel({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 animate-fade-in">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSaving) onClose();
+      }}
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4 animate-fade-in"
+    >
       <div className="bg-card border border-border rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden text-foreground">
         {/* Header Modal */}
         <div className="px-4 py-3.5 sm:p-5 border-b border-border bg-muted/30 flex items-center justify-between">

@@ -7,6 +7,7 @@ import {
   collection,
   getDocs,
   doc,
+  getDoc,
   setDoc,
   deleteDoc,
 } from 'firebase/firestore';
@@ -25,7 +26,10 @@ import {
   X,
   Info,
   Key,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
+import { createNewFirebaseUser, adminChangeOtherUserPassword } from '@/lib/firebaseAuthHelper';
 
 interface AdminSettingsViewProps {
   currentUserEmail?: string;
@@ -54,34 +58,24 @@ export default function AdminSettingsView({
   // Form User Modal
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formPassword, setFormPassword] = useState('');
+  const [showFormPassword, setShowFormPassword] = useState(false);
   const [formRole, setFormRole] = useState<UserRole>('admin');
+  const [formIsPic, setFormIsPic] = useState<boolean>(true);
   const [formAssignedPic, setFormAssignedPic] = useState('');
+  const [formAllowedPics, setFormAllowedPics] = useState<string[]>([]);
 
-  // Daftar PIC dari akun admin aktif — dinamis dari Firestore
+  // State Ganti Password Pengguna Lain oleh Superadmin
+  const [isModalChangePasswordOpen, setIsModalChangePasswordOpen] = useState(false);
+  const [passwordTargetUser, setPasswordTargetUser] = useState<UserProfile | null>(null);
+  const [targetNewPassword, setTargetNewPassword] = useState('');
+  const [targetConfirmPassword, setTargetConfirmPassword] = useState('');
+  const [showTargetPassword, setShowTargetPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [changePasswordError, setChangePasswordError] = useState<string | null>(null);
+
+  // Daftar PIC dari akun admin aktif yang berstatus PIC (isPic !== false)
   const [adminPicList, setAdminPicList] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (!db) return;
-    getDocs(collection(db, 'users'))
-      .then((snap) => {
-        const names: string[] = [];
-        snap.forEach((d) => {
-          const data = d.data();
-          if (data.role === 'admin' && data.status !== 'inactive') {
-            const n = (data.name || '').trim();
-            if (n) names.push(n);
-          }
-        });
-        const sorted = Array.from(new Set<string>(names)).sort();
-        setAdminPicList(sorted);
-        // Set default ke admin pertama jika form belum diisi
-        if (!formAssignedPic && sorted.length > 0) {
-          setFormAssignedPic(sorted[0]);
-        }
-      })
-      .catch(() => setAdminPicList(['Dela', 'Alvin', 'Holiday']));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [formStatus, setFormStatus] = useState<'active' | 'inactive'>('active');
   const [isSavingUser, setIsSavingUser] = useState(false);
@@ -102,6 +96,17 @@ export default function AdminSettingsView({
   const fetchSheetSettings = useCallback(async () => {
     setIsLoadingSheet(true);
     try {
+      if (db) {
+        const snap = await getDoc(doc(db, 'settings', 'sheets'));
+        if (snap.exists()) {
+          const d = snap.data();
+          if (d.spreadsheetId) setSpreadsheetId(d.spreadsheetId);
+          if (d.updatedAt) setSheetUpdatedAt(d.updatedAt);
+          if (d.updatedBy) setSheetUpdatedBy(d.updatedBy);
+          setIsLoadingSheet(false);
+          return;
+        }
+      }
       const res = await fetch('/api/admin/settings');
       const json = await res.json();
       if (json.ok && json.data) {
@@ -110,36 +115,55 @@ export default function AdminSettingsView({
         setSheetUpdatedBy(json.data.updatedBy || '');
       }
     } catch (e: any) {
-      console.error('Failed to load sheet settings:', e);
+      console.warn('Notice loading sheet settings:', e);
     } finally {
       setIsLoadingSheet(false);
     }
   }, []);
 
-  // Fetch Users — langsung dari Firestore (client SDK punya auth token superadmin)
+  // Fetch Users: langsung dari Firestore (client SDK punya auth token superadmin)
   const fetchUsers = useCallback(async () => {
     setIsLoadingUsers(true);
     try {
       if (!db) throw new Error('Firestore belum terinisialisasi.');
       const snap = await getDocs(collection(db, 'users'));
       const list: UserProfile[] = [];
+      const picNames: string[] = [];
+
       snap.forEach((d) => {
         const data = d.data();
+        const role = (data.role === 'superadmin'
+          ? 'superadmin'
+          : data.role === 'intern'
+          ? 'intern'
+          : 'admin') as UserRole;
+        const isPic = data.isPic !== undefined ? Boolean(data.isPic) : true;
+        const assignedPic = data.assignedPic || '';
+        const name = data.name || '';
+
         list.push({
           uid: d.id,
           email: data.email || '',
-          name: data.name || '',
-          role: (data.role === 'superadmin'
-            ? 'superadmin'
-            : data.role === 'intern'
-            ? 'intern'
-            : 'admin') as UserRole,
+          name,
+          role,
           status: data.status === 'inactive' ? 'inactive' : 'active',
-          assignedPic: data.assignedPic || '',
+          isPic,
+          assignedPic,
+          allowedPics: Array.isArray(data.allowedPics) ? data.allowedPics : [],
+          accountPassword: data.accountPassword || '',
+          passwordUpdatedAt: data.passwordUpdatedAt || '',
           createdAt: data.createdAt,
         });
+
+        // Hanya akun admin berstatus PIC (isPic !== false) dan aktif yang masuk ke list PIC sistem
+        if (role === 'admin' && data.status !== 'inactive' && isPic) {
+          const pName = (assignedPic || name).trim();
+          if (pName) picNames.push(pName);
+        }
       });
+
       setUsers(list);
+      setAdminPicList(Array.from(new Set<string>(picNames)).sort());
     } catch (e: any) {
       console.error('Failed to load users:', e);
     } finally {
@@ -152,6 +176,21 @@ export default function AdminSettingsView({
     fetchUsers();
   }, [fetchSheetSettings, fetchUsers]);
 
+  // Listener tombol Escape untuk menutup dialog modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isModalChangePasswordOpen) {
+          setIsModalChangePasswordOpen(false);
+        } else if (isModalUserOpen) {
+          setIsModalUserOpen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isModalChangePasswordOpen, isModalUserOpen]);
+
   // Handle Simpan Sheet Settings
   const handleSaveSheet = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,22 +201,33 @@ export default function AdminSettingsView({
 
     setIsSavingSheet(true);
     try {
-      const res = await fetch('/api/admin/settings', {
+      const nowIso = new Date().toISOString();
+      const byUser = currentUserEmail || 'Super Admin';
+
+      if (db) {
+        await setDoc(
+          doc(db, 'settings', 'sheets'),
+          {
+            spreadsheetId: spreadsheetId.trim(),
+            updatedAt: nowIso,
+            updatedBy: byUser,
+          },
+          { merge: true }
+        );
+      }
+
+      await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           spreadsheetId: spreadsheetId.trim(),
-          updatedBy: currentUserEmail || 'Super Admin',
+          updatedBy: byUser,
         }),
-      });
+      }).catch(() => {});
 
-      const json = await res.json();
-      if (json.ok) {
-        showAlert('success', 'Konfigurasi Google Sheets berhasil disimpan ke Firestore.');
-        fetchSheetSettings();
-      } else {
-        showAlert('error', json.error || 'Gagal menyimpan konfigurasi sheet.');
-      }
+      showAlert('success', 'Konfigurasi Google Sheets berhasil disimpan ke Firestore.');
+      setSheetUpdatedAt(nowIso);
+      setSheetUpdatedBy(byUser);
     } catch (e: any) {
       showAlert('error', e.message || 'Terjadi kesalahan saat menyimpan.');
     } finally {
@@ -190,8 +240,12 @@ export default function AdminSettingsView({
     setEditingUser(null);
     setFormName('');
     setFormEmail('');
+    setFormPassword('');
+    setShowFormPassword(false);
     setFormRole('admin');
-    setFormAssignedPic(adminPicList[0] || '');
+    setFormIsPic(true);
+    setFormAssignedPic('');
+    setFormAllowedPics([]);
     setFormStatus('active');
     setFormError(null);
     setIsModalUserOpen(true);
@@ -201,11 +255,86 @@ export default function AdminSettingsView({
     setEditingUser(u);
     setFormName(u.name);
     setFormEmail(u.email);
+    setFormPassword('');
+    setShowFormPassword(false);
     setFormRole(u.role);
-    setFormAssignedPic(u.assignedPic || adminPicList[0] || '');
+    setFormIsPic(u.isPic !== false);
+    setFormAssignedPic(u.assignedPic || u.name || '');
+    setFormAllowedPics(
+      u.allowedPics && u.allowedPics.length > 0
+        ? u.allowedPics
+        : u.assignedPic
+        ? [u.assignedPic]
+        : []
+    );
     setFormStatus(u.status);
     setFormError(null);
     setIsModalUserOpen(true);
+  };
+
+  // Buka Modal Ganti Password Pengguna
+  const openChangePasswordModal = (u: UserProfile) => {
+    setPasswordTargetUser(u);
+    setTargetNewPassword('');
+    setTargetConfirmPassword('');
+    setShowTargetPassword(false);
+    setChangePasswordError(null);
+    setIsModalChangePasswordOpen(true);
+  };
+
+  // Simpan Password Baru Pengguna Lain
+  const handleSaveChangedPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordTargetUser) return;
+    setChangePasswordError(null);
+
+    const cleanPass = targetNewPassword.trim();
+    if (cleanPass.length < 6) {
+      setChangePasswordError('Password baru minimal harus 6 karakter.');
+      return;
+    }
+
+    if (cleanPass !== targetConfirmPassword.trim()) {
+      setChangePasswordError('Konfirmasi password tidak cocok dengan password baru.');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      if (!db) throw new Error('Firestore belum terinisialisasi.');
+
+      // Update autentikasi via secondary app (jika password saat ini tersimpan)
+      try {
+        await adminChangeOtherUserPassword(
+          passwordTargetUser.email,
+          cleanPass,
+          passwordTargetUser.accountPassword
+        );
+      } catch (authErr: any) {
+        console.warn('Sinkronisasi autentikasi Firebase sekunder:', authErr.message);
+      }
+
+      // Simpan password baru di dokumen Firestore profil user
+      await setDoc(
+        doc(db, 'users', passwordTargetUser.uid),
+        {
+          accountPassword: cleanPass,
+          passwordUpdatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
+      showAlert(
+        'success',
+        `Password untuk ${passwordTargetUser.name} (${passwordTargetUser.email}) berhasil diperbarui! Pengguna dapat langsung login dengan kata sandi baru.`
+      );
+      setIsModalChangePasswordOpen(false);
+      fetchUsers();
+    } catch (err: any) {
+      setChangePasswordError(err.message || 'Gagal mengubah password pengguna.');
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   // Handle Simpan User
@@ -221,8 +350,30 @@ export default function AdminSettingsView({
       setFormError('Alamat email valid wajib diisi.');
       return;
     }
-    if ((formRole === 'admin' || formRole === 'intern') && !formAssignedPic.trim()) {
-      setFormError('Nama PIC yang dipegang / didampingi wajib dipilih atau diisi.');
+
+    if (!editingUser) {
+      if (!formPassword || formPassword.trim().length < 6) {
+        setFormError('Password wajib diisi minimal 6 karakter untuk akun baru.');
+        return;
+      }
+    }
+
+    if (formRole === 'admin') {
+      if (formIsPic) {
+        const finalPicName = formAssignedPic.trim() || formName.trim();
+        if (!finalPicName) {
+          setFormError('Nama lengkap atau nama PIC wajib diisi.');
+          return;
+        }
+      }
+      if (!formIsPic && formAllowedPics.length === 0) {
+        setFormError('Pilih minimal 1 sekat data PIC yang dapat diakses oleh admin Non-PIC ini.');
+        return;
+      }
+    }
+
+    if (formRole === 'intern' && !formAssignedPic.trim()) {
+      setFormError('Pilih Admin PIC yang didampingi oleh anak magang ini.');
       return;
     }
 
@@ -231,22 +382,78 @@ export default function AdminSettingsView({
       if (!db) throw new Error('Firestore belum terinisialisasi.');
 
       const cleanEmail = formEmail.trim().toLowerCase();
-      // Gunakan UID existing saat edit, atau email sebagai doc ID saat buat baru
+
+      // Buat akun baru di Firebase Auth jika ini pendaftaran baru
+      let createdUid = '';
+      if (!editingUser) {
+        try {
+          createdUid = await createNewFirebaseUser(cleanEmail, formPassword.trim());
+        } catch (authErr: any) {
+          if (authErr.code === 'auth/email-already-in-use') {
+            console.warn('Email sudah terdaftar di Firebase Auth, menghubungkan profil ke whitelist.');
+          } else {
+            throw new Error(`Gagal membuat autentikasi Firebase: ${authErr.message || authErr.code}`);
+          }
+        }
+      }
+
+      // Gunakan UID existing saat edit, UID baru dari Firebase Auth, atau email sebagai doc ID
       const targetDocId = editingUser?.uid && editingUser.uid.trim().length > 0
         ? editingUser.uid
-        : cleanEmail;
+        : (createdUid || cleanEmail);
 
       const validatedRole: UserRole =
         formRole === 'superadmin' ? 'superadmin' : formRole === 'intern' ? 'intern' : 'admin';
 
-      const payload = {
+      const payload: any = {
         email: cleanEmail,
         name: formName.trim(),
         role: validatedRole,
         status: formStatus,
-        assignedPic: validatedRole === 'superadmin' ? '' : formAssignedPic.trim(),
         createdAt: editingUser?.createdAt || new Date().toISOString(),
       };
+
+      if (!editingUser) {
+        payload.accountPassword = formPassword.trim();
+        payload.passwordUpdatedAt = new Date().toISOString();
+      } else if (formPassword.trim().length > 0) {
+        if (formPassword.trim().length < 6) {
+          setFormError('Password baru minimal 6 karakter.');
+          setIsSavingUser(false);
+          return;
+        }
+        try {
+          await adminChangeOtherUserPassword(
+            cleanEmail,
+            formPassword.trim(),
+            editingUser.accountPassword
+          );
+        } catch (authErr: any) {
+          console.warn('Sinkronisasi auth saat edit:', authErr.message);
+        }
+        payload.accountPassword = formPassword.trim();
+        payload.passwordUpdatedAt = new Date().toISOString();
+      }
+
+      if (validatedRole === 'admin') {
+        payload.isPic = formIsPic;
+        if (formIsPic) {
+          payload.assignedPic = formAssignedPic.trim() || formName.trim();
+          payload.allowedPics = [];
+        } else {
+          payload.assignedPic = '';
+          payload.allowedPics = formAllowedPics;
+        }
+      } else if (validatedRole === 'intern') {
+        payload.isPic = false;
+        payload.assignedPic = formAssignedPic.trim();
+        payload.allowedPics = [];
+      } else {
+        // superadmin
+        payload.isPic = false;
+        payload.assignedPic = '';
+        payload.allowedPics = [];
+      }
 
       await setDoc(doc(db, 'users', targetDocId), payload, { merge: true });
 
@@ -254,7 +461,7 @@ export default function AdminSettingsView({
         'success',
         editingUser
           ? 'Data pengguna berhasil diperbarui.'
-          : 'Pengguna baru berhasil didaftarkan ke whitelist Firestore.'
+          : `Akun baru ${formName.trim()} berhasil dibuat dan siap login dengan password yang Anda tentukan!`
       );
       setIsModalUserOpen(false);
       fetchUsers();
@@ -539,6 +746,8 @@ export default function AdminSettingsView({
                       const isSelf = u.email === currentUserEmail;
                       const isSuper = u.role === 'superadmin';
                       const isIntern = u.role === 'intern';
+                      const isPicAdmin = u.role === 'admin' && u.isPic !== false;
+                      const isNonPicAdmin = u.role === 'admin' && u.isPic === false;
 
                       return (
                         <tr key={u.uid || u.email} className="hover:bg-muted/30 transition-colors">
@@ -571,10 +780,18 @@ export default function AdminSettingsView({
                                   ? 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20'
                                   : isIntern
                                   ? 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20'
+                                  : isNonPicAdmin
+                                  ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20'
                                   : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
                               }`}
                             >
-                              {isSuper ? 'SUPERADMIN' : isIntern ? 'INTERN (MAGANG)' : 'ADMIN (PIC)'}
+                              {isSuper
+                                ? 'SUPERADMIN'
+                                : isIntern
+                                ? 'INTERN (MAGANG)'
+                                : isNonPicAdmin
+                                ? 'ADMIN (NON-PIC)'
+                                : 'ADMIN (PIC)'}
                             </span>
                           </td>
                           <td className="py-3.5 px-4 font-semibold text-foreground">
@@ -584,6 +801,23 @@ export default function AdminSettingsView({
                               <span className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-600 dark:text-sky-400">
                                 Asisten: {u.assignedPic || '-'}
                               </span>
+                            ) : isNonPicAdmin ? (
+                              <div className="flex flex-wrap items-center gap-1">
+                                {u.allowedPics && u.allowedPics.length > 0 ? (
+                                  u.allowedPics.map((p) => (
+                                    <span
+                                      key={p}
+                                      className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-500/20"
+                                    >
+                                      {p}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-[11px] text-muted-foreground italic">
+                                    Belum ada sekat
+                                  </span>
+                                )}
+                              </div>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
                                 PIC: {u.assignedPic || '-'}
@@ -603,6 +837,13 @@ export default function AdminSettingsView({
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => openChangePasswordModal(u)}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                                title={`Ganti Password untuk ${u.name}`}
+                              >
+                                <Key size={14} />
+                              </button>
                               <button
                                 onClick={() => openEditUser(u)}
                                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
@@ -634,29 +875,50 @@ export default function AdminSettingsView({
 
       {/* MODAL TAMBAH / EDIT ADMIN */}
       {isModalUserOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in select-none">
-          <div className="bg-card border border-border rounded-2xl max-w-md w-full p-6 shadow-xl space-y-5 animate-scale-up">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-heading font-black text-base text-foreground flex items-center gap-2">
-                <Key size={18} className="text-primary" />
-                <span>{editingUser ? 'Edit Pengguna Admin' : 'Tambah Admin Baru'}</span>
-              </h3>
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsModalUserOpen(false);
+          }}
+        >
+          <div
+            className="bg-card border border-border rounded-2xl max-w-lg w-full my-auto shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Modal - Selalu terlihat di bagian atas */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card shrink-0 z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                  <Key size={18} />
+                </div>
+                <div>
+                  <h3 className="font-heading font-black text-base text-foreground">
+                    {editingUser ? 'Edit Pengguna Admin' : 'Tambah Admin Baru'}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground font-medium truncate max-w-[240px]">
+                    {editingUser ? editingUser.email : 'Daftarkan hak akses akun baru'}
+                  </p>
+                </div>
+              </div>
               <button
+                type="button"
                 onClick={() => setIsModalUserOpen(false)}
-                className="p-1 text-muted-foreground hover:text-foreground rounded-lg cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors"
+                title="Tutup (Esc)"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {formError && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
-                <AlertTriangle size={15} className="shrink-0" />
-                <span>{formError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSaveUser} className="space-y-4">
+            <form onSubmit={handleSaveUser} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              {/* Form Body - Dapat discroll jika layar pendek */}
+              <div className="p-5 overflow-y-auto flex-1 space-y-4">
+                {formError && (
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
+                    <AlertTriangle size={15} className="shrink-0" />
+                    <span>{formError}</span>
+                  </div>
+                )}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-foreground">Nama Lengkap</label>
                 <input
@@ -680,12 +942,74 @@ export default function AdminSettingsView({
                   placeholder="nama@tripbanyuwangi.com"
                   className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs sm:text-sm text-foreground disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 />
-                {!editingUser && (
-                  <p className="text-[11px] text-muted-foreground">
-                    Pastikan email ini juga dibuatkan user di Authentication Firebase Console.
-                  </p>
-                )}
               </div>
+
+              {/* INPUT PASSWORD KHUSUS PENGGUNA BARU */}
+              {!editingUser && (
+                <div className="space-y-1.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">
+                      Password Akun Baru <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Min. 6 Karakter</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showFormPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={formPassword}
+                      onChange={(e) => setFormPassword(e.target.value)}
+                      placeholder="Masukkan password akun baru..."
+                      className="w-full pl-3.5 pr-10 py-2.5 bg-background border border-border rounded-xl text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowFormPassword(!showFormPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      title={showFormPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    >
+                      {showFormPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    Akun ini otomatis dibuatkan di Firebase Authentication dan langsung siap digunakan untuk login.
+                  </p>
+                </div>
+              )}
+
+              {/* INPUT PASSWORD SAAT EDIT USER (OPSIONAL) */}
+              {editingUser && (
+                <div className="p-3.5 rounded-xl bg-muted/40 border border-border/80 space-y-2.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <Key size={14} className="text-amber-500" />
+                      <span>Ganti Password Akun (Opsional)</span>
+                    </label>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Min. 6 Karakter</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showFormPassword ? 'text' : 'password'}
+                      value={formPassword}
+                      onChange={(e) => setFormPassword(e.target.value)}
+                      placeholder="Kosongkan jika tidak ingin mengubah password..."
+                      className="w-full pl-3.5 pr-10 py-2.5 bg-background border border-border rounded-xl text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowFormPassword(!showFormPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      title={showFormPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    >
+                      {showFormPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    Superadmin dapat langsung mengganti password user ini tanpa memerlukan link reset email.
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1.5">
@@ -695,9 +1019,9 @@ export default function AdminSettingsView({
                     onChange={(e) => setFormRole(e.target.value as UserRole)}
                     className="w-full px-3 py-2.5 bg-background border border-border rounded-xl text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer"
                   >
-                    <option value="admin">Admin (PIC Sales Handler)</option>
+                    <option value="admin">Admin (Pengelola Sekat Reservasi)</option>
                     <option value="intern">Intern (Anak Magang / Asisten PIC)</option>
-                    <option value="superadmin">Superadmin (Akses Penuh)</option>
+                    <option value="superadmin">Superadmin (Akses Penuh Seluruh PIC)</option>
                   </select>
                 </div>
 
@@ -714,56 +1038,226 @@ export default function AdminSettingsView({
                 </div>
               </div>
 
-              {/* Dynamic Assigned PIC Field (Untuk Admin & Intern) */}
-              {formRole !== 'superadmin' && (
-                <div className="p-3.5 rounded-xl bg-muted/40 border border-border/80 space-y-2 animate-fade-in">
+              {/* TOGGLE PIC / NON-PIC KHUSUS ROLE ADMIN */}
+              {formRole === 'admin' && (
+                <div className="p-3.5 rounded-xl bg-muted/40 border border-border space-y-2.5 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-foreground">
-                      {formRole === 'intern'
-                        ? 'Mendampingi PIC (Asisten Untuk)'
-                        : 'PIC Agen yang Dipegang'}
+                      Status PIC Akun Admin Ini
                     </label>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary px-1.5 py-0.5 rounded bg-primary/10">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                      {formIsPic ? 'Akun PIC Tunggal' : 'Admin Non-PIC (Multi-Sekat)'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormIsPic(true)}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all text-center cursor-pointer border ${
+                        formIsPic
+                          ? 'bg-amber-500 text-white border-amber-600 shadow-2xs font-black'
+                          : 'bg-background hover:bg-muted text-foreground border-border'
+                      }`}
+                    >
+                      ✓ Ya, Akun PIC
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormIsPic(false);
+                        if (formAllowedPics.length === 0 && adminPicList.length > 0) {
+                          setFormAllowedPics(adminPicList.slice(0, 2));
+                        }
+                      }}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all text-center cursor-pointer border ${
+                        !formIsPic
+                          ? 'bg-primary text-primary-foreground border-primary shadow-2xs font-black'
+                          : 'bg-background hover:bg-muted text-foreground border-border'
+                      }`}
+                    >
+                      Bukan PIC (Non-PIC)
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    {formIsPic
+                      ? 'Akun ini adalah PIC trip. Namanya otomatis muncul di list PIC sistem dan akun ini hanya mengelola data reservasi miliknya.'
+                      : 'Akun ini bukan PIC trip (contoh: Ops/Supervisor). Admin ini dapat memilih lebih dari satu sekat data PIC yang Anda izinkan di bawah.'}
+                  </p>
+                </div>
+              )}
+
+              {/* 1. JIKA ADMIN PIC: AKUN INI ADALAH PIC ITU SENDIRI */}
+              {formRole === 'admin' && formIsPic && (
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                      <ShieldCheck size={15} className="text-amber-600 dark:text-amber-400" />
+                      <span>Akun Ini Adalah PIC</span>
+                    </label>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full bg-amber-500/20">
+                      Sekat Mandiri
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-foreground">
+                      Label / Nama PIC di Sistem (Reservasi &amp; Dashboard)
+                    </label>
+                    <input
+                      type="text"
+                      value={formAssignedPic}
+                      onChange={(e) => setFormAssignedPic(e.target.value)}
+                      placeholder={formName.trim() ? formName.trim() : 'Contoh nama panggilan PIC...'}
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    />
+                    <p className="text-[11px] text-muted-foreground leading-normal">
+                      Admin ini adalah PIC itu sendiri. Nama ini otomatis terdaftar ke dalam list PIC sistem (masuk ke filter sekat reservasi &amp; dashboard). Biarkan kosong jika ingin otomatis sama dengan Nama Lengkap di atas.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* 2. JIKA ADMIN NON-PIC: PILIH LEBIH DARI SATU SEKAT DATA PIC */}
+              {formRole === 'admin' && !formIsPic && (
+                <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-2.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                      Pilihan Sekat Data PIC (Bisa Lebih Dari Satu)
+                    </label>
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => setFormAllowedPics([...adminPicList])}
+                        className="text-primary font-bold hover:underline cursor-pointer"
+                      >
+                        Pilih Semua
+                      </button>
+                      <span className="text-muted-foreground">•</span>
+                      <button
+                        type="button"
+                        onClick={() => setFormAllowedPics([])}
+                        className="text-rose-500 font-bold hover:underline cursor-pointer"
+                      >
+                        Hapus Semua
+                      </button>
+                    </div>
+                  </div>
+
+                  {adminPicList.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                      {adminPicList.map((picName) => {
+                        const isSelected = formAllowedPics.some(
+                          (p) => p.toLowerCase() === picName.toLowerCase()
+                        );
+                        return (
+                          <button
+                            key={picName}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setFormAllowedPics(
+                                  formAllowedPics.filter(
+                                    (p) => p.toLowerCase() !== picName.toLowerCase()
+                                  )
+                                );
+                              } else {
+                                setFormAllowedPics([...formAllowedPics, picName]);
+                              }
+                            }}
+                            className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all text-left flex items-center justify-between cursor-pointer border ${
+                              isSelected
+                                ? 'bg-primary text-primary-foreground border-primary font-black shadow-2xs'
+                                : 'bg-background hover:bg-muted text-foreground border-border'
+                            }`}
+                          >
+                            <span>{picName}</span>
+                            <span className="text-xs">{isSelected ? '✓' : '+'}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-rose-500 font-semibold italic">
+                      Belum ada Admin PIC yang terdaftar di Firestore. Buat akun Admin PIC terlebih dahulu.
+                    </p>
+                  )}
+
+                  <div className="text-[11px] text-muted-foreground pt-1 flex items-center justify-between border-t border-border/60">
+                    <span>
+                      Sekat aktif:{' '}
+                      <strong className="text-foreground">
+                        {formAllowedPics.length} PIC dipilih
+                      </strong>
+                    </span>
+                    {formAllowedPics.length > 0 && (
+                      <span className="font-semibold text-primary truncate max-w-[200px]">
+                        {formAllowedPics.join(', ')}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-normal">
+                    Admin Non-PIC ini dapat melihat serta memilih sekat data PIC yang diizinkan di atas pada dashboard maupun database reservasi.
+                  </p>
+                </div>
+              )}
+
+              {/* 3. JIKA INTERN: ASISTEN PIC TUNGGAL */}
+              {formRole === 'intern' && (
+                <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-500/20 space-y-2.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-sky-900 dark:text-sky-200">
+                      Mendampingi Admin PIC (Asisten Untuk)
+                    </label>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300 px-2 py-0.5 rounded-full bg-sky-500/20">
                       Wajib
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-                    {adminPicList.map((picName) => (
-                      <button
-                        key={picName}
-                        type="button"
-                        onClick={() => setFormAssignedPic(picName)}
-                        className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border ${
-                          formAssignedPic.toLowerCase() === picName.toLowerCase()
-                            ? 'bg-primary text-primary-foreground border-primary font-black shadow-2xs'
-                            : 'bg-background hover:bg-muted text-foreground border-border'
-                        }`}
-                      >
-                        {picName}
-                      </button>
-                    ))}
-                  </div>
+                  {adminPicList.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {adminPicList.map((picName) => (
+                        <button
+                          key={picName}
+                          type="button"
+                          onClick={() => setFormAssignedPic(picName)}
+                          className={`py-2 px-2.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border ${
+                            formAssignedPic.toLowerCase() === picName.toLowerCase()
+                              ? 'bg-sky-500 text-white border-sky-600 font-black shadow-2xs'
+                              : 'bg-background hover:bg-muted text-foreground border-border'
+                          }`}
+                        >
+                          {picName}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-rose-500 font-semibold italic">
+                      Belum ada Admin PIC yang terdaftar. Buat akun Admin PIC terlebih dahulu.
+                    </p>
+                  )}
 
                   <div className="pt-1">
                     <input
                       type="text"
                       value={formAssignedPic}
                       onChange={(e) => setFormAssignedPic(e.target.value)}
-                      placeholder="Atau ketik nama PIC manual (contoh: Dela)..."
-                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Pilih dari tombol di atas atau ketik nama PIC..."
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-sky-500"
                     />
                   </div>
 
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    {formRole === 'intern'
-                      ? 'Anak magang ini mendampingi PIC di atas. Bisa update data reservasi, source & review, serta HPP, namun DILARANG menghapus (delete) data apapun.'
-                      : 'Admin ini hanya akan melihat dan mengelola data tamu miliknya sendiri.'}
+                    Anak magang ini mendampingi Admin PIC di atas. Bisa update data reservasi, source &amp; review, serta HPP, namun DILARANG menghapus (delete) data apapun.
                   </p>
                 </div>
               )}
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-border">
+              </div>
+
+              {/* Footer Modal - Selalu terlihat di bagian bawah */}
+              <div className="px-5 py-3.5 border-t border-border bg-card flex items-center justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsModalUserOpen(false)}
@@ -783,6 +1277,131 @@ export default function AdminSettingsView({
                     </>
                   ) : (
                     <span>{editingUser ? 'Perbarui Akun' : 'Simpan ke Whitelist'}</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL GANTI PASSWORD PENGGUNA LAIN OLEH SUPERADMIN */}
+      {isModalChangePasswordOpen && passwordTargetUser && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fade-in select-none"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsModalChangePasswordOpen(false);
+          }}
+        >
+          <div
+            className="bg-card border border-border rounded-2xl max-w-md w-full my-auto shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Modal - Selalu terlihat */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-card shrink-0 z-10">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  <Key size={18} />
+                </div>
+                <div>
+                  <h3 className="font-heading font-black text-base text-foreground">
+                    Ganti Password Pengguna
+                  </h3>
+                  <p className="text-xs text-muted-foreground truncate max-w-[240px]">
+                    {passwordTargetUser.name} • {passwordTargetUser.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalChangePasswordOpen(false)}
+                className="w-8 h-8 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-colors"
+                title="Tutup (Esc)"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveChangedPassword} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="p-5 overflow-y-auto flex-1 space-y-4">
+                {changePasswordError && (
+                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center gap-2">
+                    <AlertTriangle size={15} className="shrink-0" />
+                    <span>{changePasswordError}</span>
+                  </div>
+                )}
+
+                <div className="p-3 rounded-xl bg-muted/40 border border-border/80 text-xs text-muted-foreground">
+                  Superadmin dapat langsung mengatur kata sandi baru untuk <strong>{passwordTargetUser.name}</strong> tanpa perlu mengirimkan link reset ke email.
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">
+                      Password Baru <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Min. 6 Karakter</span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showTargetPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={targetNewPassword}
+                      onChange={(e) => setTargetNewPassword(e.target.value)}
+                      placeholder="Masukkan password baru akun..."
+                      className="w-full pl-3.5 pr-10 py-2.5 bg-background border border-border rounded-xl text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTargetPassword(!showTargetPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                      title={showTargetPassword ? 'Sembunyikan password' : 'Lihat password'}
+                    >
+                      {showTargetPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">
+                    Konfirmasi Password Baru <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showTargetPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={targetConfirmPassword}
+                      onChange={(e) => setTargetConfirmPassword(e.target.value)}
+                      placeholder="Ulangi password baru..."
+                      className="w-full pl-3.5 pr-10 py-2.5 bg-background border border-border rounded-xl text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Modal */}
+              <div className="px-5 py-3.5 border-t border-border bg-card flex items-center justify-end gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsModalChangePasswordOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-xs hover:opacity-90 active:scale-[0.99] disabled:opacity-50 transition-all cursor-pointer"
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Menyimpan Password...</span>
+                    </>
+                  ) : (
+                    <span>Simpan Password Baru</span>
                   )}
                 </button>
               </div>

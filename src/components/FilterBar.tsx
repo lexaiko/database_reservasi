@@ -32,6 +32,8 @@ interface FilterBarProps {
   onResetFilters: () => void;
   onRefreshData: () => void;
   isPicLocked?: boolean;
+  isNonPicAdmin?: boolean;
+  allowedPics?: string[];
   picList?: string[];
   isLoading: boolean;
 }
@@ -75,18 +77,50 @@ export default function FilterBar({
   onResetFilters,
   onRefreshData,
   isPicLocked = false,
-  picList = ['Dela', 'Bagas', 'Kikik', 'Bobi', 'Dio'],
+  isNonPicAdmin = false,
+  allowedPics = [],
+  picList = [],
   isLoading,
 }: FilterBarProps) {
   // Filter drawer/panel toggle state (mobile & desktop)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Total active filter count (excluding search)
+  // Selected PICs array (untuk mendukung pemilihan lebih dari 1 sekat data oleh admin non-PIC)
+  const selectedPicArray = React.useMemo(() => {
+    if (!pic || pic === 'all') return [];
+    return pic.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
+  }, [pic]);
+
+  const handlePicClick = (val: string) => {
+    if (val === 'all') {
+      onPicChange('all');
+      return;
+    }
+    // Jika admin Non-PIC: dukung memilih lebih dari satu sekat data (multi-select toggle)
+    if (isNonPicAdmin) {
+      if (selectedPicArray.includes(val.toLowerCase())) {
+        const remaining = selectedPicArray.filter((p) => p !== val.toLowerCase());
+        onPicChange(remaining.length === 0 ? 'all' : remaining.join(','));
+      } else {
+        const next = [...selectedPicArray, val.toLowerCase()];
+        if (next.length === picList.length) {
+          onPicChange('all');
+        } else {
+          onPicChange(next.join(','));
+        }
+      }
+    } else {
+      // Superadmin / default single selection
+      onPicChange(val);
+    }
+  };
+
+  // Total active filter count (excluding search and locked PIC)
   const totalActiveFilterCount =
     (finishMonth !== 'all' ? 1 : 0) +
     (statusTrip !== 'all' ? 1 : 0) +
     (statusPayment !== 'all' ? 1 : 0) +
-    (pic !== 'all' ? 1 : 0);
+    (!isPicLocked && pic !== 'all' ? 1 : 0);
 
   const hasAnyFilter = search !== '' || totalActiveFilterCount > 0;
 
@@ -279,29 +313,38 @@ export default function FilterBar({
           <div>
             <label className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
               {isPicLocked ? <Lock className="w-3.5 h-3.5 text-primary" /> : <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />}
-              <span>PIC Reservasi {isPicLocked && '(Terkunci)'}</span>
+              <span>{isNonPicAdmin ? 'Sekat PIC yang Boleh Diakses' : 'PIC Reservasi'} {isPicLocked && '(Terkunci)'}</span>
             </label>
             {isPicLocked ? (
               <div className="p-2.5 rounded-xl bg-muted/60 border border-border/80 flex items-center gap-2">
                 <Lock size={13} className="text-primary" />
-                <span className="text-xs font-bold text-foreground capitalize">PIC: {pic || 'Dela'}</span>
+                <span className="text-xs font-bold text-foreground capitalize">PIC: {pic && pic !== 'all' ? pic : 'PIC Anda'}</span>
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                {[{ val: 'all', label: 'Semua' }, ...picList.map((p) => ({ val: p.toLowerCase(), label: p }))].map((p) => (
-                  <button
-                    key={p.val}
-                    type="button"
-                    onClick={() => onPicChange(p.val)}
-                    className={`py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border capitalize ${
-                      pic.toLowerCase() === p.val.toLowerCase()
-                        ? 'bg-primary text-primary-foreground border-primary font-extrabold shadow-2xs'
-                        : 'bg-card text-foreground hover:bg-muted border-border/60'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
+                {[
+                  { val: 'all', label: isNonPicAdmin ? 'Semua Sekat' : 'Semua' },
+                  ...picList.map((p) => ({ val: p.toLowerCase(), label: p })),
+                ].map((p) => {
+                  const isSelected =
+                    p.val === 'all'
+                      ? pic === 'all'
+                      : selectedPicArray.includes(p.val.toLowerCase());
+                  return (
+                    <button
+                      key={p.val}
+                      type="button"
+                      onClick={() => handlePicClick(p.val)}
+                      className={`py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border capitalize ${
+                        isSelected
+                          ? 'bg-primary text-primary-foreground border-primary font-extrabold shadow-2xs'
+                          : 'bg-card text-foreground hover:bg-muted border-border/60'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -443,29 +486,38 @@ export default function FilterBar({
             <div>
               <label className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
                 {isPicLocked ? <Lock className="w-3.5 h-3.5 text-primary" /> : <UserCheck className="w-3.5 h-3.5 text-muted-foreground" />}
-                <span>PIC Reservasi {isPicLocked && '(Terkunci)'}</span>
+                <span>{isNonPicAdmin ? 'Sekat PIC yang Boleh Diakses' : 'PIC Reservasi'} {isPicLocked && '(Terkunci)'}</span>
               </label>
               {isPicLocked ? (
                 <div className="p-2 rounded-xl bg-muted/60 border border-border/80 flex items-center gap-2">
                   <Lock size={13} className="text-primary" />
-                  <span className="text-xs font-bold text-foreground capitalize">PIC: {pic || 'Dela'}</span>
+                  <span className="text-xs font-bold text-foreground capitalize">PIC: {pic && pic !== 'all' ? pic : 'PIC Anda'}</span>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                  {[{ val: 'all', label: 'Semua' }, ...picList.map((p) => ({ val: p.toLowerCase(), label: p }))].map((p) => (
-                    <button
-                      key={p.val}
-                      type="button"
-                      onClick={() => onPicChange(p.val)}
-                      className={`py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border capitalize ${
-                        pic.toLowerCase() === p.val.toLowerCase()
-                          ? 'bg-primary text-primary-foreground border-primary font-extrabold shadow-2xs'
-                          : 'bg-card text-foreground hover:bg-muted border-border/60'
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
+                  {[
+                    { val: 'all', label: isNonPicAdmin ? 'Semua Sekat' : 'Semua' },
+                    ...picList.map((p) => ({ val: p.toLowerCase(), label: p })),
+                  ].map((p) => {
+                    const isSelected =
+                      p.val === 'all'
+                        ? pic === 'all'
+                        : selectedPicArray.includes(p.val.toLowerCase());
+                    return (
+                      <button
+                        key={p.val}
+                        type="button"
+                        onClick={() => handlePicClick(p.val)}
+                        className={`py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer border capitalize ${
+                          isSelected
+                            ? 'bg-primary text-primary-foreground border-primary font-extrabold shadow-2xs'
+                            : 'bg-card text-foreground hover:bg-muted border-border/60'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -524,14 +576,18 @@ export default function FilterBar({
 
             {pic !== 'all' && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground font-bold text-[11px] border border-border capitalize">
+                {isPicLocked && <Lock size={10} className="text-primary mr-0.5" />}
                 <span>PIC: {pic}</span>
-                <button
-                  type="button"
-                  onClick={() => onPicChange('all')}
-                  className="hover:text-foreground cursor-pointer"
-                >
-                  <X size={11} />
-                </button>
+                {!isPicLocked && (
+                  <button
+                    type="button"
+                    onClick={() => onPicChange('all')}
+                    className="hover:text-foreground cursor-pointer"
+                    title="Hapus filter PIC"
+                  >
+                    <X size={11} />
+                  </button>
+                )}
               </span>
             )}
 
