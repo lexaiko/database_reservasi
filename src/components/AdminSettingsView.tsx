@@ -622,7 +622,7 @@ export default function AdminSettingsView({
                     required
                     value={spreadsheetId}
                     onChange={(e) => setSpreadsheetId(e.target.value)}
-                    placeholder="Contoh: your_spreadsheet_id_here"
+                    placeholder="Contoh: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
                     className="w-full px-3.5 py-2.5 bg-background border border-border rounded-xl text-xs sm:text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   />
                   <p className="text-[11px] text-muted-foreground">
