@@ -307,10 +307,12 @@ export default function ModalDetail({
                 <span className="text-emerald-800 dark:text-emerald-300 font-black text-base">
                   {isIntern ? (
                     <span className="text-xs text-muted-foreground font-semibold">Terkunci (Hak PIC)</span>
-                  ) : reservasi.hpp > 0 ? (
+                  ) : reservasi.hpp > 0 && reservasi.statusPayment === 'Lunas' ? (
                     formatRupiah(reservasi.profit)
+                  ) : reservasi.hpp > 0 ? (
+                    <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">Belum Lunas (Pending)</span>
                   ) : (
-                    '-'
+                    <span className="text-xs text-muted-foreground font-semibold">-</span>
                   )}
                 </span>
               </div>
@@ -323,10 +325,12 @@ export default function ModalDetail({
                 <span className="text-slate-900 dark:text-slate-100 font-black text-base">
                   {isIntern ? (
                     <span className="text-xs text-muted-foreground font-semibold">Terkunci</span>
-                  ) : reservasi.hpp > 0 ? (
+                  ) : reservasi.hpp > 0 && reservasi.statusPayment === 'Lunas' ? (
                     `${reservasi.margin}%`
+                  ) : reservasi.hpp > 0 ? (
+                    <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">Belum Lunas</span>
                   ) : (
-                    '0%'
+                    <span className="text-xs text-muted-foreground font-semibold">0%</span>
                   )}
                 </span>
               </div>

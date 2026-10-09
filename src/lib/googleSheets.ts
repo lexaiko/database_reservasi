@@ -190,14 +190,17 @@ export async function getAllReservasi(forceRefresh = false): Promise<Reservasi[]
     let profit = parseCurrency(r[31]);
     let margin = parseMargin(r[32]);
 
-    // Jika HPP ada (> 0), pastikan profit & margin sinkron dengan rumus Sheet:
-    if (hpp > 0 && nilaiOrder > 0) {
-      if (profit === 0) profit = Math.max(0, nilaiOrder - hpp);
-      if (margin === 0) margin = computeMargin(nilaiOrder, hpp);
+    // Hanya hitung profit & margin jika SUDAH LUNAS dan HPP SUDAH DIISI (> 0)
+    const isLunas = statusPayment === 'Lunas';
+    const hasHpp = hpp > 0;
+
+    if (isLunas && hasHpp && nilaiOrder > 0) {
+      profit = Math.max(0, nilaiOrder - hpp);
+      margin = computeMargin(nilaiOrder, hpp);
     } else {
-      // Jika HPP belum diisi (0), rumus sheet menghasilkan 0%
-      margin = 0;
+      // Jika belum mengisi HPP atau belum lunas, tidak dihitung profit dulu
       profit = 0;
+      margin = 0;
     }
 
     // Hitung status dinamis
@@ -884,15 +887,28 @@ export async function getDashboardData(filters?: SalesFilterOptions): Promise<{
   let totalRevenue = 0;
   let totalPax = 0;
   let totalHpp = 0;
+  let grossProfit = 0;
+  let revenueLunasWithHpp = 0;
 
   for (const r of filteredSales) {
     totalRevenue += r.nilaiOrder;
     totalPax += r.pax;
-    totalHpp += r.hpp;
+    if (r.hpp > 0) {
+      totalHpp += r.hpp;
+    }
+
+    // Hanya hitung profit jika SUDAH LUNAS DAN SUDAH MENGISI HPP
+    if (r.statusPayment === 'Lunas' && r.hpp > 0 && r.nilaiOrder > 0) {
+      const p = Math.max(0, r.nilaiOrder - r.hpp);
+      grossProfit += p;
+      revenueLunasWithHpp += r.nilaiOrder;
+    }
   }
 
-  const grossProfit = Math.max(0, totalRevenue - totalHpp);
-  const grossMargin = totalRevenue > 0 && totalHpp > 0 ? computeMargin(totalRevenue, totalHpp) : 0;
+  // Margin dihitung dari rasio profit terhadap omset reservasi yang sudah lunas & ber-HPP
+  const grossMargin = revenueLunasWithHpp > 0
+    ? Number(((grossProfit / revenueLunasWithHpp) * 100).toFixed(1))
+    : 0;
 
   // 3. Piutang (semua reservasi yang belum lunas, disaring menurut PIC jika filter PIC aktif)
   const scopedForPiutang = selectedPics && selectedPics.length > 0

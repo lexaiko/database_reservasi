@@ -782,6 +782,11 @@ export default function HppManagerView({
               ) : (
                 <div className="text-xs text-muted-foreground font-semibold">
                   Estimasi Profit: <strong className="text-emerald-700 dark:text-emerald-400">{formatRupiah(profit)}</strong> (Margin: {margin}%)
+                  {selectedReservasi?.statusPayment !== 'Lunas' && (
+                    <span className="text-amber-600 dark:text-amber-400 block text-[11px] font-bold mt-0.5">
+                      *Status pembayaran belum lunas: Profit riil baru dihitung setelah pelunasan
+                    </span>
+                  )}
                 </div>
               )}
             </div>

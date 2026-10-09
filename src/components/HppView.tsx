@@ -215,8 +215,8 @@ export const HppView: React.FC<HppViewProps> = ({
         return list.sort((a, b) => (b.hpp || 0) - (a.hpp || 0));
       case 'profit-desc':
         return list.sort((a, b) => {
-          const profitA = (a.nilaiOrder || 0) - (a.hpp || 0);
-          const profitB = (b.nilaiOrder || 0) - (b.hpp || 0);
+          const profitA = (a.statusPayment === 'Lunas' && (a.hpp || 0) > 0) ? Math.max(0, (a.nilaiOrder || 0) - (a.hpp || 0)) : 0;
+          const profitB = (b.statusPayment === 'Lunas' && (b.hpp || 0) > 0) ? Math.max(0, (b.nilaiOrder || 0) - (b.hpp || 0)) : 0;
           return profitB - profitA;
         });
       case 'margin-desc':
@@ -239,25 +239,32 @@ export const HppView: React.FC<HppViewProps> = ({
     }
   }, [filteredReservations, sortBy]);
 
-  // Metrics based on active view (dynamically reacts to filters)
-  const filteredWithHpp = useMemo(
-    () => filteredReservations.filter((r) => (r.hpp || 0) > 0),
+  // Metrics based on active view (hanya transaksi yang sudah LUNAS DAN TERISI HPP)
+  const filteredEligible = useMemo(
+    () => filteredReservations.filter((r) => (r.hpp || 0) > 0 && r.statusPayment === 'Lunas'),
     [filteredReservations]
   );
-  const activeMetricsList = hasActiveFilters ? filteredWithHpp : withHppList;
+  const allEligibleList = useMemo(
+    () => reservations.filter((r) => (r.hpp || 0) > 0 && r.statusPayment === 'Lunas'),
+    [reservations]
+  );
+  const activeMetricsList = hasActiveFilters ? filteredEligible : allEligibleList;
 
   const totalHppDisplay = useMemo(
-    () => activeMetricsList.reduce((acc, r) => acc + (r.hpp || 0), 0),
-    [activeMetricsList]
+    () => (hasActiveFilters ? filteredReservations : reservations).reduce((acc, r) => acc + (r.hpp || 0), 0),
+    [hasActiveFilters, filteredReservations, reservations]
   );
-  const totalRevenueDisplay = useMemo(
+  const totalRevenueEligible = useMemo(
     () => activeMetricsList.reduce((acc, r) => acc + (r.nilaiOrder || 0), 0),
     [activeMetricsList]
   );
-  const totalProfitDisplay = totalRevenueDisplay - totalHppDisplay;
+  const totalProfitDisplay = useMemo(
+    () => activeMetricsList.reduce((acc, r) => acc + Math.max(0, (r.nilaiOrder || 0) - (r.hpp || 0)), 0),
+    [activeMetricsList]
+  );
   const avgMarginDisplay =
-    totalRevenueDisplay > 0 && totalHppDisplay > 0
-      ? ((totalProfitDisplay / totalRevenueDisplay) * 100).toFixed(1)
+    totalRevenueEligible > 0 && totalProfitDisplay > 0
+      ? ((totalProfitDisplay / totalRevenueEligible) * 100).toFixed(1)
       : '0';
 
   // Reset all filters handler
@@ -333,8 +340,8 @@ export const HppView: React.FC<HppViewProps> = ({
             {isIntern
               ? 'Akses khusus PIC & Superadmin'
               : hasActiveFilters
-              ? 'Laba dari filter aktif'
-              : 'Omset dikurangi HPP'}
+              ? `${activeMetricsList.length} trip lunas & ber-HPP`
+              : `${allEligibleList.length} trip lunas & ber-HPP`}
           </span>
         </div>
 
@@ -1036,8 +1043,12 @@ export const HppView: React.FC<HppViewProps> = ({
                       <span className="font-black text-xs tabular-nums block">
                         {isIntern ? (
                           <span className="text-muted-foreground font-semibold text-[11px]">Terkunci</span>
+                        ) : !hasHpp ? (
+                          <span className="text-muted-foreground font-semibold text-[11px]">-</span>
+                        ) : r.statusPayment !== 'Lunas' ? (
+                          <span className="text-amber-600 dark:text-amber-400 font-semibold text-[11px]" title="Belum Lunas: Profit baru dihitung setelah lunas">Belum Lunas</span>
                         ) : (
-                          <span className="text-emerald-600 dark:text-emerald-400">{hasHpp ? formatRupiah(r.profit) : '-'}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">{formatRupiah(r.profit)}</span>
                         )}
                       </span>
                     </div>
@@ -1049,8 +1060,12 @@ export const HppView: React.FC<HppViewProps> = ({
                       <span className="font-black text-foreground tabular-nums block text-xs">
                         {isIntern ? (
                           <span className="text-muted-foreground font-semibold text-[11px]">Terkunci</span>
+                        ) : !hasHpp ? (
+                          <span className="text-muted-foreground font-semibold text-[11px]">0%</span>
+                        ) : r.statusPayment !== 'Lunas' ? (
+                          <span className="text-amber-600 dark:text-amber-400 font-semibold text-[11px]">Belum Lunas</span>
                         ) : (
-                          hasHpp ? `${r.margin}%` : '0%'
+                          `${r.margin}%`
                         )}
                       </span>
                     </div>
@@ -1204,8 +1219,12 @@ export const HppView: React.FC<HppViewProps> = ({
                       <td className="py-3.5 px-4 text-right tabular-nums font-black text-xs">
                         {isIntern ? (
                           <span className="text-[11px] text-muted-foreground font-semibold">Terkunci</span>
+                        ) : !hasHpp ? (
+                          <span className="text-[11px] text-muted-foreground font-semibold">-</span>
+                        ) : r.statusPayment !== 'Lunas' ? (
+                          <span className="text-amber-600 dark:text-amber-400 font-semibold text-[11px]" title="Belum Lunas: Profit baru dihitung setelah lunas">Belum Lunas</span>
                         ) : (
-                          <span className="text-emerald-600 dark:text-emerald-400">{hasHpp ? formatRupiah(r.profit) : '-'}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400">{formatRupiah(r.profit)}</span>
                         )}
                       </td>
 
@@ -1213,8 +1232,12 @@ export const HppView: React.FC<HppViewProps> = ({
                       <td className="py-3.5 px-4 text-right tabular-nums font-black text-xs">
                         {isIntern ? (
                           <span className="text-[11px] text-muted-foreground font-semibold">Terkunci</span>
+                        ) : !hasHpp ? (
+                          <span className="text-[11px] text-muted-foreground font-semibold">0%</span>
+                        ) : r.statusPayment !== 'Lunas' ? (
+                          <span className="text-amber-600 dark:text-amber-400 font-semibold text-[11px]">Belum Lunas</span>
                         ) : (
-                          hasHpp ? `${r.margin}%` : '0%'
+                          `${r.margin}%`
                         )}
                       </td>
 
