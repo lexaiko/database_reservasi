@@ -292,11 +292,7 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
     // Fallback jika gagal hitung baris
   }
 
-  const formulaAA = estimatedRow >= 2 ? `=X${estimatedRow}-Y${estimatedRow}` : sisa;
-  const formulaAF = estimatedRow >= 2 ? `=X${estimatedRow}-AE${estimatedRow}` : '';
-  const formulaAG = estimatedRow >= 2 ? `=IF(OR(X${estimatedRow}=""; X${estimatedRow}=0); 0; AF${estimatedRow}/X${estimatedRow})` : '';
-
-  // Struktur kolom A sampai AG (33 kolom):
+  // Struktur kolom A sampai AE (31 kolom):
   // A: KODE, B: NAMA TAMU, C: WA, D: IG, E: TIKTOK
   // F: START, G: FINISH, H: PAX, I: TRIP, J: PAKET
   // K: DAY 1, L: DAY 2, M: DAY 3, N: DAY 4
@@ -305,7 +301,9 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
   // U: STATUS TRIP, V: LINK REVIEW, W: LINK FOTO
   // X: NILAI ORDER, Y: DP, Z: TGL DP
   // AA: SISA PELUNASAN, AB: TGL PELUNASAN, AC: STATUS PAYMENT
-  // AD: NOTES PAYMENT, AE: HPP, AF: PROFIT, AG: MARGIN (%)
+  // AD: NOTES PAYMENT, AE: HPP
+  // CATATAN: Kolom AF (Profit) dan AG (Margin %) DIHITUNG OTOMATIS OLEH ARRAYFORMULA DI GOOGLE SHEETS
+  // Aplikasi sengaja TIDAK MENYENTUH kolom AF & AG agar ARRAYFORMULA baris 2 tidak tertimpa/error #REF!
   const newRow = [
     sanitize(input.kode),
     sanitize(input.namaTamu),
@@ -333,18 +331,16 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
     nilaiOrder,                      // Kolom X
     dp,                              // Kolom Y
     tglDpFmt,                        // Kolom Z
-    formulaAA,                       // Kolom AA: Sisa Pelunasan (Formula)
+    '',                              // Kolom AA: Dihitung otomatis oleh ARRAYFORMULA di Sheet
     '',                              // Kolom AB: Tgl Pelunasan
     initialStatusPayment,            // Kolom AC: "DP 1" atau "Lunas"
     '',                              // Kolom AD: Notes Payment
     '',                              // Kolom AE: HPP (kosong saat awal masuk)
-    formulaAF,                       // Kolom AF: Profit (Formula)
-    formulaAG,                       // Kolom AG: Margin (%) (Formula)
   ];
 
   const appendRes = await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: `'${SHEET_NAMES.reservasi}'!A:AG`,
+    range: `'${SHEET_NAMES.reservasi}'!A:AE`,
     valueInputOption: 'USER_ENTERED',
     insertDataOption: 'INSERT_ROWS',
     requestBody: {
@@ -357,30 +353,6 @@ export async function addReservasi(input: ReservasiInput): Promise<{ ok: boolean
   const match = updatedRange.match(/!A(\d+):/) || updatedRange.match(/!A(\d+)$/);
   if (match) {
     rowNumber = parseInt(match[1], 10);
-  }
-
-  // Jika nomor baris aktual berbeda dengan estimasi, perbarui formulanya sesuai nomor baris aktual
-  if (rowNumber >= 2 && rowNumber !== estimatedRow) {
-    try {
-      await sheets.spreadsheets.values.batchUpdate({
-        spreadsheetId,
-        requestBody: {
-          valueInputOption: 'USER_ENTERED',
-          data: [
-            {
-              range: `'${SHEET_NAMES.reservasi}'!AA${rowNumber}`,
-              values: [[`=X${rowNumber}-Y${rowNumber}`]],
-            },
-            {
-              range: `'${SHEET_NAMES.reservasi}'!AF${rowNumber}:AG${rowNumber}`,
-              values: [[`=X${rowNumber}-AE${rowNumber}`, `=IF(OR(X${rowNumber}=""; X${rowNumber}=0); 0; AF${rowNumber}/X${rowNumber})`]],
-            },
-          ],
-        },
-      });
-    } catch (fmtErr) {
-      console.warn(`Gagal menyelaraskan formula otomatis untuk baris ${rowNumber}:`, fmtErr);
-    }
   }
 
   invalidateCache();
@@ -431,9 +403,6 @@ export async function updateReservasi(
     statusPayment = 'Lunas';
   }
 
-  const profit = Math.max(0, nilaiOrder - target.hpp);
-  const margin = nilaiOrder > 0 ? Number(((profit / nilaiOrder) * 100).toFixed(1)) : 0;
-
   const updatedRow = [
     sanitize(updates.kode || target.kode),
     sanitize(updates.namaTamu || target.namaTamu),
@@ -461,18 +430,17 @@ export async function updateReservasi(
     nilaiOrder,
     dp,
     tglDp,
-    `=X${rowNumber}-Y${rowNumber}`,
+    '', // Kolom AA: Dihitung otomatis oleh ARRAYFORMULA di Sheet
     sanitize(target.tglPelunasan),
     statusPayment,
     sanitize(target.notesPayment),
     target.hpp,
-    `=X${rowNumber}-AE${rowNumber}`,
-    `=IF(OR(X${rowNumber}=""; X${rowNumber}=0); 0; AF${rowNumber}/X${rowNumber})`,
+    // Kolom AF (Profit) & AG (Margin) TIDAK disentuh agar ARRAYFORMULA sheet di baris 2 tidak error #REF!
   ];
 
   await sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `'${SHEET_NAMES.reservasi}'!A${rowNumber}:AG${rowNumber}`,
+    range: `'${SHEET_NAMES.reservasi}'!A${rowNumber}:AE${rowNumber}`,
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [updatedRow],
@@ -804,22 +772,19 @@ export async function saveHpp(
   const target = allReservasi.find((r) => r.kode.toLowerCase() === cleanKode.toLowerCase());
 
   if (target) {
-    const profit = Math.max(0, target.nilaiOrder - totalHpp);
-    const margin = computeMargin(target.nilaiOrder, totalHpp);
     const finalPaymentStatus = newStatusPayment || target.statusPayment;
 
     await sheets.spreadsheets.values.update({
       spreadsheetId,
-      range: `'${SHEET_NAMES.reservasi}'!AC${target.rowNumber}:AG${target.rowNumber}`,
+      range: `'${SHEET_NAMES.reservasi}'!AC${target.rowNumber}:AE${target.rowNumber}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: {
         values: [
           [
-            finalPaymentStatus, // AC: Status Payment
+            finalPaymentStatus,        // AC: Status Payment
             target.notesPayment || '', // AD: Notes Payment
-            totalHpp,           // AE: HPP
-            `=X${target.rowNumber}-AE${target.rowNumber}`, // AF: Profit formula
-            `=IF(OR(X${target.rowNumber}=""; X${target.rowNumber}=0); 0; AF${target.rowNumber}/X${target.rowNumber})`, // AG: Margin formula
+            totalHpp,                  // AE: HPP
+            // Kolom AF (Profit) & AG (Margin %) DIHITUNG OTOMATIS OLEH ARRAYFORMULA DI GOOGLE SHEETS
           ],
         ],
       },

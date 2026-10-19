@@ -47,10 +47,9 @@ function simpanData(data) {
     ];
 
     sheet.getRange(lastRow, 1, 1, rowData.length).setValues([rowData]);
-    sheet.getRange(lastRow, 27).setValue("=X" + lastRow + "-Y" + lastRow); // Kolom AA: Sisa Pelunasan
     sheet.getRange(lastRow, 29).setValue("DP 1"); 
-    sheet.getRange(lastRow, 32).setValue("=X" + lastRow + "-AE" + lastRow); // Kolom AF: Profit
-    sheet.getRange(lastRow, 33).setValue("=IF(OR(X" + lastRow + "=\"\"; X" + lastRow + "=0); 0; AF" + lastRow + "/X" + lastRow + ")"); // Kolom AG: Margin (%)
+    // Catatan: Kolom AA (27: Sisa), AF (32: Profit), dan AG (33: Margin %)
+    // sengaja TIDAK diisi manual agar ARRAYFORMULA di Sheet baris 2 menghitung otomatis tanpa error #REF!
 
     // Eksekusi Auto-Sync Kalender (Anti-Double Super Akurat)
     try {
