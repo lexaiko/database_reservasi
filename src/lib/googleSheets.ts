@@ -186,13 +186,14 @@ export async function getAllReservasi(forceRefresh = false): Promise<Reservasi[]
     const tglPelunasan = normalizeDateToYMD(r[27]);
     const statusPayment = (String(r[28] || '').trim() || 'DP 1') as StatusPayment;
     const notesPayment = String(r[29] || '').trim();
-    const hpp = parseCurrency(r[30]);
+    const rawHpp = r[30];
+    const hasHpp = rawHpp !== undefined && rawHpp !== null && String(rawHpp).trim() !== '';
+    const hpp = hasHpp ? parseCurrency(rawHpp) : 0;
     let profit = parseCurrency(r[31]);
     let margin = parseMargin(r[32]);
 
-    // Hanya hitung profit & margin jika SUDAH LUNAS dan HPP SUDAH DIISI (> 0)
+    // Hanya hitung profit & margin jika SUDAH LUNAS dan HPP SUDAH DIISI (termasuk Rp 0 jika DP hangus)
     const isLunas = statusPayment === 'Lunas';
-    const hasHpp = hpp > 0;
 
     if (isLunas && hasHpp && nilaiOrder > 0) {
       profit = Math.max(0, nilaiOrder - hpp);
@@ -240,6 +241,7 @@ export async function getAllReservasi(forceRefresh = false): Promise<Reservasi[]
       statusPayment,
       notesPayment,
       hpp,
+      hasHpp,
       profit,
       margin,
       computedStatusTrip,
@@ -858,12 +860,13 @@ export async function getDashboardData(filters?: SalesFilterOptions): Promise<{
   for (const r of filteredSales) {
     totalRevenue += r.nilaiOrder;
     totalPax += r.pax;
-    if (r.hpp > 0) {
+    const rHasHpp = r.hasHpp ?? (r.hpp > 0);
+    if (rHasHpp) {
       totalHpp += r.hpp;
     }
 
-    // Hanya hitung profit jika SUDAH LUNAS DAN SUDAH MENGISI HPP
-    if (r.statusPayment === 'Lunas' && r.hpp > 0 && r.nilaiOrder > 0) {
+    // Hanya hitung profit jika SUDAH LUNAS DAN SUDAH MENGISI HPP (termasuk HPP Rp 0 jika DP hangus)
+    if (r.statusPayment === 'Lunas' && rHasHpp && r.nilaiOrder > 0) {
       const p = Math.max(0, r.nilaiOrder - r.hpp);
       grossProfit += p;
       revenueLunasWithHpp += r.nilaiOrder;

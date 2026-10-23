@@ -129,8 +129,9 @@ export const HppView: React.FC<HppViewProps> = ({
   }, [search, activeTab, selectedMonth, selectedPayment, selectedPic, sortBy, pageSize]);
 
   // Global metrics from all reservations (unfiltered)
-  const withHppList = useMemo(() => reservations.filter((r) => (r.hpp || 0) > 0), [reservations]);
-  const withoutHppList = useMemo(() => reservations.filter((r) => !r.hpp || r.hpp === 0), [reservations]);
+  const isHasHpp = (r: Reservasi) => r.hasHpp ?? ((r.hpp || 0) > 0);
+  const withHppList = useMemo(() => reservations.filter(isHasHpp), [reservations]);
+  const withoutHppList = useMemo(() => reservations.filter((r) => !isHasHpp(r)), [reservations]);
   const needsUpdateList = useMemo(() => reservations.filter((r) => r.needsHppUpdate), [reservations]);
 
   // Count active filters (excluding search)
@@ -149,9 +150,9 @@ export const HppView: React.FC<HppViewProps> = ({
 
     // 1. Filter by Tab Status HPP
     if (activeTab === 'with-hpp') {
-      list = list.filter((r) => (r.hpp || 0) > 0);
+      list = list.filter(isHasHpp);
     } else if (activeTab === 'without-hpp') {
-      list = list.filter((r) => !r.hpp || r.hpp === 0);
+      list = list.filter((r) => !isHasHpp(r));
     } else if (activeTab === 'needs-update') {
       list = list.filter((r) => r.needsHppUpdate);
     }
@@ -215,8 +216,8 @@ export const HppView: React.FC<HppViewProps> = ({
         return list.sort((a, b) => (b.hpp || 0) - (a.hpp || 0));
       case 'profit-desc':
         return list.sort((a, b) => {
-          const profitA = (a.statusPayment === 'Lunas' && (a.hpp || 0) > 0) ? Math.max(0, (a.nilaiOrder || 0) - (a.hpp || 0)) : 0;
-          const profitB = (b.statusPayment === 'Lunas' && (b.hpp || 0) > 0) ? Math.max(0, (b.nilaiOrder || 0) - (b.hpp || 0)) : 0;
+          const profitA = (a.statusPayment === 'Lunas' && isHasHpp(a)) ? Math.max(0, (a.nilaiOrder || 0) - (a.hpp || 0)) : 0;
+          const profitB = (b.statusPayment === 'Lunas' && isHasHpp(b)) ? Math.max(0, (b.nilaiOrder || 0) - (b.hpp || 0)) : 0;
           return profitB - profitA;
         });
       case 'margin-desc':
@@ -239,13 +240,14 @@ export const HppView: React.FC<HppViewProps> = ({
     }
   }, [filteredReservations, sortBy]);
 
-  // Metrics based on active view (hanya transaksi yang sudah LUNAS DAN TERISI HPP)
+  // Metrics based on active view (hanya transaksi yang sudah LUNAS DAN TERISI HPP, termasuk Rp 0 seperti DP hangus)
+  const isEligibleForMetrics = (r: Reservasi) => isHasHpp(r) && r.statusPayment === 'Lunas';
   const filteredEligible = useMemo(
-    () => filteredReservations.filter((r) => (r.hpp || 0) > 0 && r.statusPayment === 'Lunas'),
+    () => filteredReservations.filter(isEligibleForMetrics),
     [filteredReservations]
   );
   const allEligibleList = useMemo(
-    () => reservations.filter((r) => (r.hpp || 0) > 0 && r.statusPayment === 'Lunas'),
+    () => reservations.filter(isEligibleForMetrics),
     [reservations]
   );
   const activeMetricsList = hasActiveFilters ? filteredEligible : allEligibleList;
@@ -304,11 +306,17 @@ export const HppView: React.FC<HppViewProps> = ({
               </span>
             )}
           </div>
-          <div className="text-xs sm:text-xl font-black text-orange-600 dark:text-orange-400 tabular-nums leading-tight break-all">
-            {formatRupiah(totalHppDisplay)}
-          </div>
+          {isLoading ? (
+            <div className="h-6 sm:h-7 w-28 bg-muted/60 animate-pulse rounded-lg my-0.5" />
+          ) : (
+            <div className="text-xs sm:text-xl font-black text-orange-600 dark:text-orange-400 tabular-nums leading-tight break-all">
+              {formatRupiah(totalHppDisplay)}
+            </div>
+          )}
           <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium block truncate">
-            {hasActiveFilters
+            {isLoading
+              ? 'Memuat data HPP...'
+              : hasActiveFilters
               ? `${activeMetricsList.length} trip terfilter`
               : `${withHppList.length} trip terisi HPP`}
           </span>
@@ -331,6 +339,8 @@ export const HppView: React.FC<HppViewProps> = ({
             <div className="text-xs sm:text-sm font-bold text-muted-foreground leading-tight py-1">
               Terkunci
             </div>
+          ) : isLoading ? (
+            <div className="h-6 sm:h-7 w-28 bg-muted/60 animate-pulse rounded-lg my-0.5" />
           ) : (
             <div className="text-xs sm:text-xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums leading-tight break-all">
               {formatRupiah(totalProfitDisplay)}
@@ -339,6 +349,8 @@ export const HppView: React.FC<HppViewProps> = ({
           <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium block truncate">
             {isIntern
               ? 'Akses khusus PIC & Superadmin'
+              : isLoading
+              ? 'Memuat data profit...'
               : hasActiveFilters
               ? `${activeMetricsList.length} trip lunas & ber-HPP`
               : `${allEligibleList.length} trip lunas & ber-HPP`}
@@ -359,6 +371,8 @@ export const HppView: React.FC<HppViewProps> = ({
               <div className="text-xs sm:text-sm font-bold text-muted-foreground py-0.5">
                 Terkunci
               </div>
+            ) : isLoading ? (
+              <div className="h-7 sm:h-8 w-20 bg-muted/60 animate-pulse rounded-lg my-0.5" />
             ) : (
               <div className="text-lg sm:text-2xl font-black text-primary tabular-nums">
                 {avgMarginDisplay}%
@@ -367,6 +381,8 @@ export const HppView: React.FC<HppViewProps> = ({
             <span className="text-[10px] sm:text-[11px] text-muted-foreground font-medium block sm:mt-1">
               {isIntern
                 ? 'Akses khusus PIC & Superadmin'
+                : isLoading
+                ? 'Menghitung rasio...'
                 : hasActiveFilters
                 ? 'Rata-rata margin data tersaring'
                 : 'Persentase profitabilitas rata-rata'}
@@ -956,7 +972,7 @@ export const HppView: React.FC<HppViewProps> = ({
             </div>
           ) : (
             paginatedItems.map((r, idx) => {
-              const hasHpp = (r.hpp || 0) > 0;
+              const hasHpp = isHasHpp(r);
               const rowNumberDisplay = r.rowNumber ? `#${r.rowNumber}` : '';
 
               return (
@@ -1148,7 +1164,7 @@ export const HppView: React.FC<HppViewProps> = ({
                 </tr>
               ) : (
                 paginatedItems.map((r, idx) => {
-                  const hasHpp = (r.hpp || 0) > 0;
+                  const hasHpp = isHasHpp(r);
                   const rowNumberDisplay = r.rowNumber ? `#${r.rowNumber}` : '';
 
                   return (

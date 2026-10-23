@@ -43,6 +43,7 @@ export interface Reservasi {
   statusPayment: StatusPayment; // Col AC (29)
   notesPayment: string;       // Col AD (30)
   hpp: number;                // Col AE (31)
+  hasHpp?: boolean;           // True jika sel Kolom AE diisi di sheet (termasuk Rp 0), False jika kosong/blank
   profit: number;             // Col AF (32)
   margin: number;             // Col AG (33)
   

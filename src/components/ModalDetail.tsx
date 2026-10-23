@@ -294,7 +294,9 @@ export default function ModalDetail({
 
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800">
                 <span className="text-slate-400 dark:text-slate-500 block font-semibold mb-0.5">Total HPP (AE)</span>
-                <span className="text-slate-900 dark:text-slate-100 font-extrabold">{formatRupiah(reservasi.hpp)}</span>
+                <span className="text-slate-900 dark:text-slate-100 font-extrabold">
+                  {(reservasi.hasHpp ?? ((reservasi.hpp || 0) > 0)) ? formatRupiah(reservasi.hpp) : 'Belum Ada'}
+                </span>
               </div>
             </div>
 
@@ -307,9 +309,9 @@ export default function ModalDetail({
                 <span className="text-emerald-800 dark:text-emerald-300 font-black text-base">
                   {isIntern ? (
                     <span className="text-xs text-muted-foreground font-semibold">Terkunci (Hak PIC)</span>
-                  ) : reservasi.hpp > 0 && reservasi.statusPayment === 'Lunas' ? (
+                  ) : (reservasi.hasHpp ?? ((reservasi.hpp || 0) > 0)) && reservasi.statusPayment === 'Lunas' ? (
                     formatRupiah(reservasi.profit)
-                  ) : reservasi.hpp > 0 ? (
+                  ) : (reservasi.hasHpp ?? ((reservasi.hpp || 0) > 0)) ? (
                     <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">Belum Lunas (Pending)</span>
                   ) : (
                     <span className="text-xs text-muted-foreground font-semibold">-</span>
@@ -325,9 +327,9 @@ export default function ModalDetail({
                 <span className="text-slate-900 dark:text-slate-100 font-black text-base">
                   {isIntern ? (
                     <span className="text-xs text-muted-foreground font-semibold">Terkunci</span>
-                  ) : reservasi.hpp > 0 && reservasi.statusPayment === 'Lunas' ? (
+                  ) : (reservasi.hasHpp ?? ((reservasi.hpp || 0) > 0)) && reservasi.statusPayment === 'Lunas' ? (
                     `${reservasi.margin}%`
-                  ) : reservasi.hpp > 0 ? (
+                  ) : (reservasi.hasHpp ?? ((reservasi.hpp || 0) > 0)) ? (
                     <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">Belum Lunas</span>
                   ) : (
                     <span className="text-xs text-muted-foreground font-semibold">0%</span>

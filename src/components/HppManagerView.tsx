@@ -232,8 +232,9 @@ export default function HppManagerView({
   // Calculations for active guest
   const totalHpp = items.reduce((sum, item) => sum + parseCurrency(item.nominalStr), 0);
   const nilaiOrder = selectedReservasi?.nilaiOrder || 0;
-  const profit = totalHpp > 0 ? Math.max(0, nilaiOrder - totalHpp) : 0;
-  const margin = computeMargin(nilaiOrder, totalHpp);
+  const isHppFilled = (selectedReservasi?.hasHpp ?? false) || items.some((it) => parseCurrency(it.nominalStr) > 0);
+  const profit = isHppFilled ? Math.max(0, nilaiOrder - totalHpp) : 0;
+  const margin = isHppFilled ? computeMargin(nilaiOrder, totalHpp) : 0;
 
   // Group items by category for Detail view
   const categorySummary = useMemo(() => {
@@ -1039,7 +1040,7 @@ export default function HppManagerView({
                 <span className="text-sm sm:text-base font-black text-foreground tabular-nums block truncate">
                   {isIntern ? (
                     <span className="text-xs text-muted-foreground font-semibold">Terkunci</span>
-                  ) : totalHpp > 0 ? (
+                  ) : isHppFilled ? (
                     `${margin}%`
                   ) : (
                     '0%'

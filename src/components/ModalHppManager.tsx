@@ -111,8 +111,9 @@ export default function ModalHppManager({
 
   // Hitung total live persis sesuai Google Sheet
   const totalHpp = items.reduce((sum, item) => sum + parseCurrency(item.nominalStr), 0);
-  const profit = totalHpp > 0 ? Math.max(0, (reservasi.nilaiOrder || 0) - totalHpp) : 0;
-  const margin = computeMargin(reservasi.nilaiOrder || 0, totalHpp);
+  const isHppFilled = (reservasi.hasHpp ?? false) || items.some((it) => parseCurrency(it.nominalStr) > 0);
+  const profit = isHppFilled ? Math.max(0, (reservasi.nilaiOrder || 0) - totalHpp) : 0;
+  const margin = isHppFilled ? computeMargin(reservasi.nilaiOrder || 0, totalHpp) : 0;
 
   const handleAddItem = () => {
     const firstCat = Object.keys(masterKategori)[0] || 'Tiket';

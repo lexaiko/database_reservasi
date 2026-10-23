@@ -219,18 +219,19 @@ export function parseMargin(val: any): number {
 }
 
 /**
- * Menghitung persentase margin sesuai rumus persis di Google Sheet:
- * =ARRAYFORMULA(IF(LEN(AE4:AE); IFERROR((VALUE(X4:X)-VALUE(AE4:AE))/VALUE(X4:X); 0); 0))
+ * Menghitung persentase margin sesuai rumus di Google Sheet:
+ * =ARRAYFORMULA(IF(A2:A="";"";IF(LEN(AE2:AE);IFERROR((X2:X-AE2:AE)/X2:X;0);0)))
  * 
- * Aturan Sheet:
- * - Jika HPP belum diisi / 0: Margin adalah 0% (Bukan 100%).
- * - Jika HPP > 0 dan Nilai Order > 0: Margin = ((Nilai Order - HPP) / Nilai Order) * 100.
+ * Aturan Bisnis:
+ * - Jika Nilai Order <= 0: Margin 0%
+ * - Jika HPP = 0 (misal DP customer hangus, tanpa pengeluaran vendor): Margin = 100%
+ * - Jika HPP > 0: Margin = ((Nilai Order - HPP) / Nilai Order) * 100
  */
 export function computeMargin(nilaiOrder: number, hpp: number): number {
   const order = Math.round(Number(nilaiOrder) || 0);
-  const cost = Math.round(Number(hpp) || 0);
-  if (order <= 0 || cost <= 0) return 0;
-  const profit = order - cost;
+  const cost = Math.max(0, Math.round(Number(hpp) || 0));
+  if (order <= 0) return 0;
+  const profit = Math.max(0, order - cost);
   const pct = (profit / order) * 100;
   return Number(pct.toFixed(1));
 }
